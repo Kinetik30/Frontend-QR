@@ -45,13 +45,13 @@ export default function QRHistory() {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <Link to="/dashboard" className="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500">
+    <div className="relative max-w-5xl mx-auto space-y-6 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
+      <Link to="/dashboard" className="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 relative z-10">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </Link>
 
-      <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg px-6 py-5">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-gray-700/50 rounded-2xl px-6 py-5 relative z-10">
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
           <Database className="text-gray-500 dark:text-gray-400" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">QR Lifecycle History</h2>
         </div>

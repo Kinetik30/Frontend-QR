@@ -75,8 +75,8 @@ function Layout({ children }) {
   }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
-      <header className="bg-white dark:bg-gray-800 shadow dark:border-b dark:border-gray-700">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-indigo-50/40 via-purple-50/40 to-emerald-50/40 dark:from-gray-900 dark:via-indigo-900/10 dark:to-gray-900 flex flex-col transition-colors duration-200">
+      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow dark:border-b dark:border-gray-700/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">QR Tracker</h1>

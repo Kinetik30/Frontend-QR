@@ -68,19 +68,18 @@ export default function Departments() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div>
+    <div className="relative max-w-6xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
+      <div className="relative z-10">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Department Pipeline</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">Configure your departments and their sequential order in the production lifecycle.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+
         {/* Create Department Form */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4 border-b dark:border-gray-700 pb-4">
-              <Plus className="text-blue-500" />
+          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50 dark:border-gray-700/50">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">New Department</h3>
             </div>
 
@@ -141,8 +140,8 @@ export default function Departments() {
 
         {/* List of Departments */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 flex items-center gap-2 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-gray-700/50 rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 flex items-center gap-2 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm">
               <Layers className="text-gray-500 w-5 h-5" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Configured Sequence</h3>
             </div>
@@ -152,7 +151,7 @@ export default function Departments() {
             ) : departments.length === 0 ? (
               <div className="p-6 text-center text-gray-500 dark:text-gray-400">No departments found. Create one.</div>
             ) : (
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              <ul className="divide-y divide-gray-200/50 dark:divide-gray-700/50 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm">
                 {departments.map((d, index) => (
                   <li key={d.id} className="p-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">

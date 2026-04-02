@@ -29,10 +29,10 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded shadow-md">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-600 dark:text-blue-300">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-indigo-50/40 via-purple-50/40 to-emerald-50/40 dark:from-gray-900 dark:via-indigo-900/10 dark:to-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl border border-white/50 dark:border-gray-700/50">
+        <div className="flex flex-col items-center justify-center space-y-2">   
+          <div className="p-3 bg-blue-100/50 dark:bg-blue-900/50 rounded-full text-blue-600 dark:text-blue-300">
             <LogIn size={32} />
           </div>
           <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">QR Tracker</h2>

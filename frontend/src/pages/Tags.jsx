@@ -140,43 +140,43 @@ export default function Tags() {
   if (loading) return <div className="text-center py-10 dark:text-white">Loading tags...</div>;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="relative space-y-6 max-w-5xl mx-auto p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 relative">
+        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6 relative z-10">
           <div className="flex">
             <div className="flex-shrink-0">
               <span className="text-red-500">⚠</span>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+              <p className="text-sm text-red-700 dark:text-red-400">{error}</p> 
               {user?.role === 'admin' && (
-                <p className="text-xs text-red-600 dark:text-red-300 mt-1">
-                    Database serialization crashed. A legacy tag (like a malformed string) might be trapping the list. Use inline delete to clear bad tags.
+                <p className="text-xs text-red-600 dark:text-red-300 mt-1">     
+                    Database serialization crashed. A legacy tag (like a malformed string) might be trapping the list. Use inline delete to clear bad tags.     
                 </p>
               )}
             </div>
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between border-b dark:border-gray-700 pb-4">
+      <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-gray-700/50 pb-4 relative z-10">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Registered QR Tags</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm">Manage physical QR labels and their current sessions</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowScanner(!showScanner)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors shadow-md shadow-blue-500/20"
         >
           <Smartphone size={16} /> {showScanner ? "Close Camera" : "Scan to Find"}
         </button>
       </div>
 
       {showScanner && (
-        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg p-6 mb-6">
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 mb-6 border border-white/50 dark:border-gray-700/50 relative z-10">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Scan QR to open management view</h3>
           </div>
-          
+
           {scanMessage.text && (
             <div className={`p-3 mb-4 rounded text-sm text-center ${scanMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
               {scanMessage.text}
@@ -213,7 +213,7 @@ export default function Tags() {
 
       {/* Admin Only: Register New QR Tag inline */}
       {user?.role === 'admin' && (
-        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg p-6 mb-6">
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 mb-6 border border-white/50 dark:border-gray-700/50 relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <PlusCircle className="text-blue-500" />
@@ -277,18 +277,18 @@ export default function Tags() {
                 className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
               />
             </div>
-            <button 
-              type="submit" 
-              disabled={registering} 
-              className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 h-10 w-full sm:w-auto"
+            <button
+              type="submit"
+              disabled={registering}
+              className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 h-10 w-full sm:w-auto shadow-md shadow-blue-500/20"
             >
               Register QR
             </button>
           </form>
         </div>
       )}
-        
-        <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg overflow-hidden">
+
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {qrCodes.length === 0 ? (
             <li className="p-6 text-center text-gray-500 dark:text-gray-400">No QR codes registered.</li>
