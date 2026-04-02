@@ -11,6 +11,12 @@ export default function SupervisorScanner() {
   const [loading, setLoading] = useState(false);
 
   const fetchQRState = async (qrId) => {
+    if (!/^\d{8}$/.test(qrId)) {
+      setStatus({ type: 'error', message: 'Invalid Tag: QR code must be an 8-digit number.' });
+      setScannedQR(null);
+      setActiveSession(null);
+      return;
+    }
     setLoading(true);
     setStatus({ type: '', message: '' });
     try {
@@ -45,17 +51,17 @@ export default function SupervisorScanner() {
 
     try {
       if (newStatus === 'active') {
-        await apiClient.patch(`/qr/${scannedQR.id}/enable`);
-        setStatus({ type: 'success', message: 'Tag activated successfully!' });
-      } else {
-        // Handle release
-        if (activeSession) {
-          await apiClient.patch(`/session/${activeSession.id}/close`);
+          await apiClient.patch(`/qr/${scannedQR.id}/enable`, {});
+          setStatus({ type: 'success', message: 'Tag activated successfully!' });
+        } else {
+          // Handle release
+          if (activeSession) {
+            await apiClient.patch(`/session/${activeSession.id}/close`, {});
+          }
+          await apiClient.patch(`/qr/${scannedQR.id}/disable`, {});
+          setStatus({ type: 'success', message: 'Tag released successfully!' });
         }
-        await apiClient.patch(`/qr/${scannedQR.id}/disable`);
-        setStatus({ type: 'success', message: 'Tag released successfully!' });
-      }
-      
+
       // Refresh state
       fetchQRState(scannedQR.id);
     } catch (err) {

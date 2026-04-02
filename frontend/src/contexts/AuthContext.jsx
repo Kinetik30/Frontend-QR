@@ -8,6 +8,20 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper to ensure role is a string
+  const normalizeData = (data) => {
+    if (!data) return data;
+    let normalizedRole = data.role_level ?? data.role ?? 'operator';
+    if (typeof normalizedRole === 'number') {
+      if (normalizedRole === 3) normalizedRole = 'admin';
+      else if (normalizedRole === 2) normalizedRole = 'supervisor';
+      else normalizedRole = 'operator';
+    } else {
+      normalizedRole = String(normalizedRole).toLowerCase();
+    }
+    return { ...data, role: normalizedRole, role_level: normalizedRole };
+  };
+
   // Load state from localStorage on init
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
@@ -15,7 +29,7 @@ export function AuthProvider({ children }) {
 
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      setUser(normalizeData(JSON.parse(savedUser)));
     }
     setLoading(false);
   }, []);
@@ -23,31 +37,29 @@ export function AuthProvider({ children }) {
   // Simulate or actual login
   const login = async (email, password) => {
     try {
-      // The backend expects form data for OAuth2PasswordRequestForm
-      const formData = new URLSearchParams();
-      formData.append('username', email); // OAuth2 expects 'username' field
-      formData.append('password', password);
+      // The backend expects a UserLoginRequest JSON object
+      const payload = {
+        email: email,
+        password: password
+      };
 
-      const response = await apiClient.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
+      // Changed to the expected /users/login path as defined by backend
+      const response = await apiClient.post('/users/login', payload);
 
-      const data = response.data;
-      const jwtToken = data.access_token;
+      const { access_token, user: userData } = response.data;
       
       // Store token
-      setToken(jwtToken);
-      localStorage.setItem('token', jwtToken);
+      setToken(access_token);
+      if (access_token) {
+        localStorage.setItem('token', access_token);
+      }
 
-      // Now fetch user details and role
-      const userRes = await apiClient.get('/users/me', {
-        headers: { Authorization: `Bearer ${jwtToken}` }
-      });
-      const userData = userRes.data;
-
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-
+      // Backend returns the user object directly in the login response
+      if (userData) {
+          const normalizedUser = normalizeData(userData);
+          setUser(normalizedUser);
+          localStorage.setItem('user', JSON.stringify(normalizedUser));
+      }
       return { success: true };
     } catch (err) {
       return { 

@@ -23,7 +23,6 @@ export default function Tags() {
   const [selectedTag, setSelectedTag] = useState(null);
   const [tagActionLoading, setTagActionLoading] = useState(false);
   const [tagActionMessage, setTagActionMessage] = useState({ text: '', type: '' });
-  const [tagToDelete, setTagToDelete] = useState(null);
 
   const fetchQRCodes = async () => {
     try {
@@ -101,40 +100,52 @@ export default function Tags() {
     }
   };
 
-  const handleDeleteTag = (tagId) => {
-    setTagActionMessage({ text: '', type: '' });
-    setTagToDelete(tagId);
-  };
-
-  const confirmDeleteAction = async () => {
-    if (!tagToDelete) return;
+  const handleDeleteTag = async (tagId) => {
+    if (!window.confirm(`Are you sure you want to completely delete QR tag ${tagId} and all its tracking history? This action is permanent.`)) {
+      return;
+    }
     
     setTagActionLoading(true);
     setTagActionMessage({ text: '', type: '' });
     
     try {
-      await apiClient.delete(`/qr/${tagToDelete}`);
+      await apiClient.delete(`/qr/${tagId}`);
       setTagActionMessage({ text: 'Tag completely deleted!', type: 'success' });
       fetchQRCodes();
       setTimeout(() => {
-        setTagToDelete(null);
         setSelectedTag(null);
         setTagActionMessage({ text: '', type: '' });
-        setManualDeleteId('');
       }, 2000);
     } catch (err) {
       setTagActionMessage({ text: err.response?.data?.detail || 'Failed to delete tag.', type: 'error' });
+    } finally {
       setTagActionLoading(false);
     }
   };
 
   const [manualDeleteId, setManualDeleteId] = useState('');
 
-  const handleManualDelete = (e) => {
+  const handleManualDelete = async (e) => {
     e.preventDefault();
     if (!manualDeleteId) return;
+    
+    if (!window.confirm(`Are you sure you want to completely delete QR tag "${manualDeleteId}"? This action is permanent.`)) {
+      return;
+    }
+    
+    setTagActionLoading(true);
     setTagActionMessage({ text: '', type: '' });
-    setTagToDelete(manualDeleteId);
+
+    try {
+      await apiClient.delete(`/qr/${manualDeleteId}`);
+      setTagActionMessage({ text: `Tag "${manualDeleteId}" completely deleted!`, type: 'success' });
+      setManualDeleteId('');
+      fetchQRCodes();
+    } catch (err) {
+      setTagActionMessage({ text: err.response?.data?.detail || 'Failed to delete tag.', type: 'error' });
+    } finally {
+      setTagActionLoading(false);
+    }
   };
 
   if (loading) return <div className="text-center py-10 dark:text-white">Loading tags...</div>;
@@ -287,7 +298,30 @@ export default function Tags() {
           </form>
         </div>
       )}
-        
+        {user?.role === 'admin' && (
+          <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 shadow rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-bold text-red-800 dark:text-red-400 mb-2 flex items-center gap-2">
+              <Trash size={16} /> Admin Force Delete
+            </h3>
+            <p className="text-xs text-red-600 dark:text-red-300 mb-3">Use this to permanently remove malformed tags that are trapping the system.</p>
+            <form onSubmit={handleManualDelete} className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                placeholder="exact-string-to-delete"
+                value={manualDeleteId}
+                onChange={(e) => setManualDeleteId(e.target.value)}
+                className="flex-1 max-w-sm border border-red-300 dark:border-red-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                type="submit"
+                disabled={!manualDeleteId || tagActionLoading}
+                className="px-4 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 w-full sm:w-auto"
+              >
+                Force Delete
+              </button>
+            </form>
+          </div>
+        )}
         <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 shadow rounded-lg overflow-hidden">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {qrCodes.length === 0 ? (
@@ -397,53 +431,6 @@ export default function Tags() {
                   onClick={() => { setSelectedTag(null); setTagActionMessage({ text: '', type: '' }); }}
                   disabled={tagActionLoading}
                   className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {tagToDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 animate-in fade-in transition-opacity">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-sm overflow-hidden relative">
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Confirm Deletion</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                Are you sure you want to completely delete QR tag <span className="font-mono font-semibold text-gray-800 dark:text-gray-200">{tagToDelete}</span>? This action is permanent.
-              </p>
-              
-              {tagActionMessage.text && (
-                <div className={`p-3 mb-4 rounded text-sm ${tagActionMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                  {tagActionMessage.text}
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                {(!tagActionMessage.text || tagActionMessage.type === 'error') && !tagActionLoading && (
-                  <button
-                    onClick={confirmDeleteAction}
-                    disabled={tagActionLoading}
-                    className="flex-1 bg-red-600 text-white py-2 rounded-md font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                )}
-                {(tagActionMessage.type === 'success' || tagActionLoading) && (
-                  <button
-                    disabled
-                    className="flex-1 text-white rounded-md py-2 font-medium transition bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
-                  >
-                    Processing...
-                  </button>
-                )}
-                <button
-                  onClick={() => { setTagToDelete(null); setTagActionMessage({ text: '', type: '' }); }}
-                  disabled={tagActionLoading}
-                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>

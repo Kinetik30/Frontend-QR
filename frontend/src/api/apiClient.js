@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,7 +36,7 @@ apiClient.interceptors.response.use(
 // ==========================================
 // MOCK BACKEND DATA FOR UI DESIGN REVIEW
 // ==========================================
-const IS_DEMO_MODE = true; // Set to false when you connect a real backend
+const IS_DEMO_MODE = false; // Set to false when you connect a real backend
 
 if (IS_DEMO_MODE) {
   let mockUserEmail = localStorage.getItem('mockEmail') || 'admin@demo.com';

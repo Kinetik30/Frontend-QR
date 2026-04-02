@@ -12,12 +12,18 @@ import Tags from './pages/Tags';
 import Users from './pages/Users';
 import SessionManager from './pages/SessionManager';
 import QRHistory from './pages/QRHistory';
+import Profile from './pages/Profile';
+import Departments from './pages/Departments';
 
 // Role Enum matching backend logic
 const ROLES = {
-  OPERATOR: 1,
-  SUPERVISOR: 2,
-  ADMIN: 3
+  operator: 1,
+  supervisor: 2,
+  admin: 3
+};
+
+const getRoleLevel = (roleStr) => {
+  return ROLES[roleStr] || 0;
 };
 
 function ProtectedRoute({ children, minimumRole }) {
@@ -29,9 +35,9 @@ function ProtectedRoute({ children, minimumRole }) {
     return <Navigate to="/login" />;
   }
   
-  if (user.role < minimumRole) {
+  if (getRoleLevel(user.role) < minimumRole) {
     // If not enough permissions, send to reasonable default
-    return <Navigate to={user.role === ROLES.OPERATOR ? "/scan" : "/dashboard"} />;
+    return <Navigate to={user.role === 'operator' ? "/scan" : "/dashboard"} />;
   }
   
   return children;
@@ -75,20 +81,26 @@ function Layout({ children }) {
           <div className="flex items-center space-x-8">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">QR Tracker</h1>
             <nav className="flex space-x-2">
-              {user?.role >= ROLES.SUPERVISOR && (
+              {getRoleLevel(user?.role) >= ROLES.supervisor && (
                 <Link to="/dashboard" className={navItemClass('/dashboard')}>Dashboard</Link>
               )}
-              {user?.role >= ROLES.SUPERVISOR && (
+              {getRoleLevel(user?.role) >= ROLES.supervisor && (
                 <Link to="/supervisor-scan" className={navItemClass('/supervisor-scan')}>Supervisor Scan</Link>
               )}
-              {user?.role >= ROLES.OPERATOR && (
+              {getRoleLevel(user?.role) >= ROLES.operator && (
                 <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
               )}
-              {user?.role >= ROLES.SUPERVISOR && (
+              {getRoleLevel(user?.role) >= ROLES.supervisor && (
                 <Link to="/tags" className={navItemClass('/tags')}>QR Tags</Link>
               )}
-              {user?.role >= ROLES.ADMIN && (
+              {getRoleLevel(user?.role) >= ROLES.supervisor && (
+                <Link to="/departments" className={navItemClass('/departments')}>Department</Link>
+              )}
+              {getRoleLevel(user?.role) >= ROLES.admin && (
                 <Link to="/users" className={navItemClass('/users')}>Users</Link>
+              )}
+              {user && (
+                <Link to="/profile" className={navItemClass('/profile')}>Profile</Link>
               )}
             </nav>
           </div>
@@ -100,8 +112,8 @@ function Layout({ children }) {
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-              {user?.name} ({user?.role === 3 ? 'Admin' : user?.role === 2 ? 'Supervisor' : 'Operator'})
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 hidden sm:block">
+              {user?.name} ({user?.role === 'admin' ? 'Admin' : user?.role === 'supervisor' ? 'Supervisor' : 'Operator'})
             </span>
             <button
               onClick={logout}
@@ -128,48 +140,58 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={!user ? <Login /> : <Navigate to={user.role === ROLES.OPERATOR ? "/scan" : "/dashboard"} />} />
+      <Route path="/login" element={!user ? <Login /> : <Navigate to={user.role === 'operator' ? "/scan" : "/dashboard"} />} />
       
       {/* Root redirect maps logic so landing is always Dashboard for supervisors+ */}
-      <Route path="/" element={<Navigate to={user ? (user.role === ROLES.OPERATOR ? "/scan" : "/dashboard") : "/login"} />} />
+      <Route path="/" element={<Navigate to={user ? (user.role === 'operator' ? "/scan" : "/dashboard") : "/login"} />} />
 
       {/* Operator + Routes */}
+      <Route path="/profile" element={
+        <ProtectedRoute minimumRole={ROLES.operator}>
+          <Layout><Profile /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/scan" element={
-        <ProtectedRoute minimumRole={ROLES.OPERATOR}>
+        <ProtectedRoute minimumRole={ROLES.operator}>
           <Layout><ScanPage /></Layout>
         </ProtectedRoute>
       } />
 
       {/* Supervisor + Routes */}
       <Route path="/supervisor-scan" element={
-        <ProtectedRoute minimumRole={ROLES.SUPERVISOR}>
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><SupervisorScanner /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/dashboard" element={
-        <ProtectedRoute minimumRole={ROLES.SUPERVISOR}>
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><Dashboard /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/tags" element={
-        <ProtectedRoute minimumRole={ROLES.SUPERVISOR}>
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><Tags /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/departments" element={
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
+          <Layout><Departments /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/qr/:qrId" element={
-        <ProtectedRoute minimumRole={ROLES.SUPERVISOR}>
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><SessionManager /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/qr/:qrId/history" element={
-        <ProtectedRoute minimumRole={ROLES.SUPERVISOR}>
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><QRHistory /></Layout>
         </ProtectedRoute>
       } />
 
       {/* Admin Routes */}
       <Route path="/users" element={
-        <ProtectedRoute minimumRole={ROLES.ADMIN}>
+        <ProtectedRoute minimumRole={ROLES.admin}>
           <Layout><Users /></Layout>
         </ProtectedRoute>
       } />

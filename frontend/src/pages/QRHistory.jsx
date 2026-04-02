@@ -6,16 +6,34 @@ import { ArrowLeft, Database, Clock } from 'lucide-react';
 export default function QRHistory() {
   const { qrId } = useParams();
   const [history, setHistory] = useState([]);
+  const [tagDetails, setTagDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await apiClient.get(`/qr/${qrId}/history`);
-        setHistory(res.data);
+        const [historyRes, tagRes] = await Promise.allSettled([
+          apiClient.get(`/qr/${qrId}/history`),
+          apiClient.get(`/qr/${qrId}`)
+        ]);
+
+        if (tagRes.status === 'fulfilled') {
+          setTagDetails(tagRes.value.data);
+        } else {
+          setError('QR Tag not found.');
+          setLoading(false);
+          return;
+        }
+
+        if (historyRes.status === 'fulfilled') {
+          setHistory(historyRes.value.data);
+        } else {
+          // If history throws 404, it might just mean no sessions exist.
+          setHistory([]);
+        }
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to fetch history');
+        setError('Failed to fetch data');
       } finally {
         setLoading(false);
       }
@@ -37,7 +55,18 @@ export default function QRHistory() {
           <Database className="text-gray-500 dark:text-gray-400" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">QR Lifecycle History</h2>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-mono mb-4">QR UUID: {qrId}</p>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">QR UUID: {qrId}</p>
+          {tagDetails && (
+            <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${tagDetails.is_active ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800' : 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'}`}>
+              {tagDetails.is_active ? 'ACTIVATED' : 'NOT ACTIVATED'}
+            </span>
+          )}
+        </div>
+
+        {tagDetails && tagDetails.supervisor_id && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Claimed by Supervisor: {tagDetails.supervisor_id}</p>
+        )}
 
         <div className="space-y-8 mt-6">
           {history.length === 0 ? (

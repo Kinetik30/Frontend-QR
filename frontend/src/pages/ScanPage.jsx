@@ -1,20 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 import { Camera, Send, CheckCircle, Smartphone } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function ScanPage() {
   const [qrId, setQrId] = useState('');
+  const [itemId, setItemId] = useState('');
   const [department, setDepartment] = useState('');
-  const [notes, setNotes] = useState('');
+  const [departments, setDepartments] = useState([]);
+  const [generalRemarks, setGeneralRemarks] = useState('');
+  const [errorRemarks, setErrorRemarks] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await apiClient.get('/departments');
+        const fetched = res.data?.items || res.data || [];
+        const sorted = [...fetched].sort((a, b) => 
+          (a.sequence_order || 0) - (b.sequence_order || 0)
+        );
+        setDepartments(sorted);
+      } catch (err) {
+        console.error('Failed to fetch departments', err);
+      }
+    };
+    fetchDepartments();
+  }, []);
+
   const handleScan = async (e) => {
     if (e?.preventDefault) e.preventDefault();
-    if (!qrId || !department) {
-      setStatus({ type: 'error', message: 'QR ID and Department are required.' });
+    if (!qrId || !itemId || !department) {
+      setStatus({ type: 'error', message: 'QR ID, Item ID, and Department are required.' });
+      return;
+    }
+
+    if (!/^\d{8}$/.test(qrId)) {
+      setStatus({ type: 'error', message: 'Invalid Tag: QR code must be an 8-digit number.' });
       return;
     }
 
@@ -22,10 +46,33 @@ export default function ScanPage() {
     setLoading(true);
 
     try {
-      await apiClient.post(`/qr/${qrId}/scan`, { department, notes });
+      // First verify if item exists to handle unique constraint warning or validation
+      // Usually checking if the QR already logged an item or if the item is known
+      const sessionRes = await apiClient.get(`/session/${qrId}`);
+      if (sessionRes.data && sessionRes.data.remarks) {
+         const isItemAlreadyUsed = sessionRes.data.remarks.some(r => r.item_id === itemId);
+         if (isItemAlreadyUsed) {
+           setStatus({ type: 'error', message: 'Item ID has already been logged. Please use a unique Item ID.' });
+           setLoading(false);
+           return;
+         }
+      }
+    } catch (err) {
+      // Ignore get session errors here and let the post handle failures (like session not active)
+    }
+
+    try {
+      await apiClient.post(`/session/${qrId}/remarks`, {
+        department_id: department,
+        item_id: itemId,
+        general_remarks: generalRemarks,
+        issue_remarks: errorRemarks
+      });
       setStatus({ type: 'success', message: 'Scan logged successfully!' });
       setQrId('');
-      setNotes('');
+      setItemId('');
+      setGeneralRemarks('');
+      setErrorRemarks('');
     } catch (err) {
       setStatus({ 
         type: 'error', 
@@ -67,7 +114,13 @@ export default function ScanPage() {
             <Scanner 
               onScan={(result) => {
                 if (result && result.length > 0) {
-                  setQrId(result[0].rawValue);
+                  const scannedId = result[0].rawValue;
+                  if (!/^\d{8}$/.test(scannedId)) {
+                    setStatus({ type: 'error', message: 'Invalid Tag: QR code must be an 8-digit number.' });
+                    setShowScanner(false);
+                    return;
+                  }
+                  setQrId(scannedId);
                   setShowScanner(false);
                   setStatus({ type: 'success', message: 'QR Scanned successfully!' });
                 }
@@ -82,38 +135,65 @@ export default function ScanPage() {
 
         <form onSubmit={handleScan} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">QR ID</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">QR ID</label>
             <input
               type="text"
               required
-              readOnly
-              placeholder="Scan a QR code to fill..."
+              maxLength={8}
+              placeholder="Scan or type 8-digit ID..."
               value={qrId}
-              onChange={(e) => setQrId(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 sm:text-sm"
+              onChange={(e) => setQrId(e.target.value.replace(/\D/g, ''))}
+              className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 bg-white dark:bg-gray-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white dark:placeholder-gray-400 sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Department / Station</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item ID</label>
             <input
               type="text"
               required
-              placeholder="e.g. Assembly Line 1"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white sm:text-sm"
+              placeholder="e.g. ITEM-204"
+              value={itemId}
+              onChange={(e) => setItemId(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white dark:placeholder-gray-400 bg-white dark:bg-gray-700 sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department / Station</label>
+              <select
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white dark:placeholder-gray-400 bg-white dark:bg-gray-700 sm:text-sm"
+              >
+                <option value="">Select a department...</option>
+                {departments.map((d, index) => (
+                  <option key={d.id} value={d.id}>
+                    {d.sequence_order ?? index + 1}. {d.name || d.dept_type}
+                  </option>
+                ))}
+              </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">General Remarks</label>
             <textarea
-              rows={3}
-              placeholder="Any issues or observations?"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white sm:text-sm"
+              rows={2}
+              placeholder="Any general observations?"
+              value={generalRemarks}
+              onChange={(e) => setGeneralRemarks(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white dark:placeholder-gray-400 bg-white dark:bg-gray-700 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Error Remarks</label>
+            <textarea
+              rows={2}
+              placeholder="Describe any issues or defects..."
+              value={errorRemarks}
+              onChange={(e) => setErrorRemarks(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white dark:placeholder-gray-400 bg-white dark:bg-gray-700 sm:text-sm"
             />
           </div>
 
