@@ -131,16 +131,25 @@ export default function Dashboard() {
 
               {/* Middle: Active / Inactive Cards Stacked */}
               <div className="flex flex-col gap-4 h-56">
-                <div className="bg-emerald-50/50 dark:bg-emerald-900/20 backdrop-blur-md p-4 rounded-2xl border border-emerald-100/60 dark:border-emerald-800/40 flex flex-col justify-center items-center flex-1 shadow-lg shadow-emerald-900/5">
-                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Active</p>
-                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{activeQrs}</p>
+                <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 text-white p-4 rounded-3xl flex items-center justify-between shadow-lg flex-1">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-lg font-bold tracking-wider text-white mb-1">Active</p>
+                    <p className="text-4xl font-extrabold">{activeQrs}</p>
+                  </div>
+                  <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm">
+                    <QrCode size={24} strokeWidth={2.5} className="text-white drop-shadow-sm" />
+                  </div>
                 </div>
-                <div className="bg-red-50/50 dark:bg-red-900/20 backdrop-blur-md p-4 rounded-2xl border border-red-100/60 dark:border-red-800/40 flex flex-col justify-center items-center flex-1 shadow-lg shadow-red-900/5">
-                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-widest mb-1">Inactive</p>
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">{inactiveQrs}</p>
-                </div>
-              </div>
 
+                <div className="bg-gradient-to-br from-red-400 to-red-500 text-white p-4 rounded-3xl flex items-center justify-between shadow-lg flex-1">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-lg font-bold tracking-wider text-white mb-1">Inactive</p>
+                    <p className="text-4xl font-extrabold">{inactiveQrs}</p>
+                  </div>
+                  <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm">
+                    <QrCode size={24} strokeWidth={2.5} className="text-white drop-shadow-sm" />
+                  </div>                </div>
+              </div>
               {/* Extreme right: Pie Chart */}
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -175,37 +184,57 @@ export default function Dashboard() {
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Registered Users</h3>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">     
               {/* Total Users */}
-              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/60 dark:border-gray-700/50 flex flex-col justify-between items-center h-48 hover:shadow-xl transition-shadow shadow-blue-900/5 group">
-                <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Total Users</p>
-                <UsersIcon size={42} strokeWidth={1.5} className="text-indigo-500 dark:text-indigo-400 drop-shadow-sm my-2 group-hover:scale-110 transition-transform" />
-                <p className="text-4xl font-bold text-gray-900 dark:text-white">{users?.length || 0}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">TOTAL USERS</p>
+              <div className="bg-gradient-to-br from-teal-400 to-teal-500 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
+                <div className="flex justify-between items-center w-full">      
+                  <div className="flex flex-col">
+                    <p className="text-base font-bold text-white/90">Total Users</p>
+                    <p className="text-4xl font-extrabold text-white mt-1.5">{users?.length || 0}</p>
+                  </div>
+                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
+                    <UsersIcon size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
 
               {/* Admins */}
-              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/60 dark:border-gray-700/50 flex flex-col justify-between items-center h-48 hover:shadow-xl transition-shadow shadow-purple-900/5 group">
-                <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Admins</p>
-                <Shield size={42} strokeWidth={1.5} className="text-purple-500 dark:text-purple-400 drop-shadow-sm my-2 group-hover:scale-110 transition-transform" />
-                <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Admins'] || 0}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">ADMINS</p>
+              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex flex-col">
+                    <p className="text-base font-bold text-white/90">Admins</p> 
+                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Admins'] || 0}</p>
+                  </div>
+                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
+                    <Shield size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
 
               {/* Supervisors */}
-              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/60 dark:border-gray-700/50 flex flex-col justify-between items-center h-48 hover:shadow-xl transition-shadow shadow-blue-900/5 group">
-                <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Supervisors</p>
-                <ClipboardList size={42} strokeWidth={1.5} className="text-blue-500 dark:text-blue-400 drop-shadow-sm my-2 group-hover:scale-110 transition-transform" />
-                <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Supervisors'] || 0}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">SUPERVISORS</p>
+              <div className="bg-gradient-to-br from-orange-400 to-orange-500 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex flex-col">
+                    <p className="text-base font-bold text-white/90">Supervisors</p>
+                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Supervisors'] || 0}</p>
+                  </div>
+                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
+                    <ClipboardList size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
 
               {/* Operators */}
-              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/60 dark:border-gray-700/50 flex flex-col justify-between items-center h-48 hover:shadow-xl transition-shadow shadow-emerald-900/5 group">
-                <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Operators</p>
-                <UserCog size={42} strokeWidth={1.5} className="text-emerald-500 dark:text-emerald-400 drop-shadow-sm my-2 group-hover:scale-110 transition-transform" />
-                <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Operators'] || 0}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">OPERATORS</p>
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
+                <div className="flex justify-between items-center w-full">      
+                  <div className="flex flex-col">
+                    <p className="text-base font-bold text-white/90">Operators</p>
+                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Operators'] || 0}</p>
+                  </div>
+                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
+                    <UserCog size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
