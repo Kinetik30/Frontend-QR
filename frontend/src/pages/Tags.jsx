@@ -25,17 +25,35 @@ export default function Tags() {
   const [tagActionMessage, setTagActionMessage] = useState({ text: '', type: '' });
   const [tagToDelete, setTagToDelete] = useState(null);
 
-  const fetchQRCodes = async () => {
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isPaginatedView, setIsPaginatedView] = useState(false);
+
+  const fetchQRCodes = async (page = 1) => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/qr');
+      const res = await apiClient.get(`/qr?page=${page}&page_size=10`);
       
-      let qrData = res.data;
-      if (!Array.isArray(qrData)) {
-        const key = Object.keys(qrData || {}).find(k => Array.isArray(qrData[k]));
-        qrData = key ? qrData[key] : [];
+      let qrData = [];
+      if (res.data?.items) {
+        qrData = res.data.items;
+        setTotalPages(res.data.total_pages || 1);
+        setTotalItems(res.data.total || 0);
+      } else {
+        // Fallback for mock or unexpected structure
+        qrData = Array.isArray(res.data) ? res.data : [];
+        const key = Object.keys(res.data || {}).find(k => Array.isArray(res.data[k]));
+        if (key && !Array.isArray(res.data)) qrData = res.data[key];
+        
+        // Mock fallback pagination
+        setTotalPages(1);
+        setTotalItems(qrData.length);
       }
+
       setQrCodes(qrData || []);
+      setCurrentPage(page);
     } catch (err) {
       setError('Failed to fetch QR codes.');
     } finally {
@@ -44,7 +62,7 @@ export default function Tags() {
   };
 
   useEffect(() => {
-    fetchQRCodes();
+    fetchQRCodes(1);
   }, []);
 
   const registerQR = async (e) => {
@@ -59,7 +77,7 @@ export default function Tags() {
       setQrNotes('');
       setQrIdToRegister('');
       setShowRegisterScanner(false);
-      fetchQRCodes();
+      fetchQRCodes(isPaginatedView ? currentPage : 1);
       setCreateMessage({ text: 'QR Created Successfully!', type: 'success' });
       setTimeout(() => setCreateMessage({ text: '', type: '' }), 5000);
     } catch (err) {
@@ -89,7 +107,7 @@ export default function Tags() {
         await apiClient.patch(`/qr/${tag.id}/disable`, {});
       }
       setTagActionMessage({ text: `Tag successfully marked as ${newStatus}!`, type: 'success' });
-      fetchQRCodes();
+      fetchQRCodes(isPaginatedView ? currentPage : 1);
       setTimeout(() => {
         setSelectedTag(null);
         setTagActionMessage({ text: '', type: '' });
@@ -115,7 +133,7 @@ export default function Tags() {
     try {
       await apiClient.delete(`/qr/${tagToDelete}`);
       setTagActionMessage({ text: 'Tag completely deleted!', type: 'success' });
-      fetchQRCodes();
+      fetchQRCodes(isPaginatedView ? currentPage : 1);
       setTimeout(() => {
         setTagToDelete(null);
         setSelectedTag(null);
@@ -335,6 +353,43 @@ export default function Tags() {
             </li>
           ))}
         </ul>
+        {(!isPaginatedView && totalPages > 1) && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+            <button
+              onClick={() => {
+                setIsPaginatedView(true);
+                fetchQRCodes(1);
+              }}
+              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium rounded-md hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors shadow-sm"
+            >
+              View More ({totalItems} total tags)
+            </button>
+          </div>
+        )}
+        
+        {isPaginatedView && totalPages > 1 && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-4">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => fetchQRCodes(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => fetchQRCodes(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Inline Tag Details / Status Overlay Model */}
