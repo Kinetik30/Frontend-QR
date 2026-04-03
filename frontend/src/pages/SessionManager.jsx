@@ -75,12 +75,12 @@ export default function SessionManager() {
   const { qr, active_session: session } = data;
 
   return (
-    <div className="relative max-w-4xl mx-auto space-y-6 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
+    <div className="relative max-w-4xl mx-auto space-y-6 p-4 rounded-xl bg-gradient-to-br from-blue-100 via-blue-50 to-emerald-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900">
       <Link to="/dashboard" className="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 relative z-10">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </Link>
 
-      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
         <div className="px-6 py-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm flex justify-between items-center">
           <div>
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">QR Code Controls</h3>

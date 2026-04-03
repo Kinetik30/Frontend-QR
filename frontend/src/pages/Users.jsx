@@ -170,7 +170,7 @@ export default function Users() {
   };
 
   return (
-    <div className="relative max-w-6xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
+    <div className="relative max-w-6xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-blue-100 via-blue-50 to-emerald-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900">
       <div className="relative z-10">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">Create and view system access roles</p>
@@ -180,7 +180,7 @@ export default function Users() {
 
         {/* Create User Form */}
         <div className="lg:col-span-1">
-          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50 dark:border-gray-700/50">
+          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-purple-500/20 dark:shadow-purple-900/30 rounded-2xl p-6 border border-gray-200 dark:border-gray-700/50">
             <div className="flex items-center gap-2 mb-4 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
               <UserPlus className="text-purple-500" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Create User</h3>
@@ -211,10 +211,10 @@ export default function Users() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role Level</label>
-                <select value={role} onChange={e=>setRole(e.target.value)} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-purple-500 focus:border-purple-500">
-                  <option value="operator">Operator</option>
-                  <option value="supervisor">Supervisor</option>
-                  <option value="admin">Admin</option>
+                <select value={role} onChange={e=>setRole(e.target.value)} className="mt-1 block w-full border border-gray-300 dark:border-purple-800/80 rounded-md shadow-sm p-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-purple-50 focus:ring-purple-500 focus:border-purple-500">
+                  <option value="operator" className="bg-white dark:bg-[#2d3748] text-gray-900 dark:text-purple-50 py-1 font-medium">Operator</option>
+                  <option value="supervisor" className="bg-white dark:bg-[#2d3748] text-gray-900 dark:text-purple-50 py-1 font-medium">Supervisor</option>
+                  <option value="admin" className="bg-white dark:bg-[#2d3748] text-gray-900 dark:text-purple-50 py-1 font-medium">Admin</option>
                 </select>
               </div>
               <button type="submit" disabled={creating} className="w-full px-4 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-50">
@@ -226,7 +226,7 @@ export default function Users() {
 
         {/* Users List */}
         <div className="lg:col-span-2">
-          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl border border-white/50 dark:border-gray-700/50 rounded-2xl overflow-hidden">
+          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-purple-500/20 dark:shadow-purple-900/30 border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center gap-2">
                 <UsersIcon size={20} className="text-gray-500 dark:text-gray-400" /> Active Users directory

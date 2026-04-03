@@ -87,8 +87,6 @@ export default function ScanPage() {
       setGeneralRemarks(latestRemark.general_remarks || '');
       setErrorRemarks(latestRemark.issue_remarks || '');
       setOriginalData({
-        id: latestRemark.id,
-        history: latestRemark.remarks_history || [],
         general: latestRemark.general_remarks || '',
         error: latestRemark.issue_remarks || ''
       });
@@ -178,26 +176,12 @@ export default function ScanPage() {
             }
         }
 
-let finalGeneralRemarks = generalRemarks ? generalRemarks.trim() : '';
-          let finalErrorRemarks = errorRemarks ? errorRemarks.trim() : '';
-
-          if (!finalGeneralRemarks && !finalErrorRemarks) {
-              finalGeneralRemarks = 'none';
-          }
-
-if (isEditingExisting && originalData?.id) {
-                await apiClient.put(`/session/${qrId}/remarks/${originalData.id}`, {
-                    general_remarks: finalGeneralRemarks,
-                    issue_remarks: finalErrorRemarks
-                });
-            } else {
-                await apiClient.post(`/session/${qrId}/remarks`, {
-                    department_id: department,
-                    item_id: itemId,
-                    general_remarks: finalGeneralRemarks,
-                    issue_remarks: finalErrorRemarks
-                });
-            }
+        await apiClient.post(`/session/${qrId}/remarks`, {
+            department_id: department,
+            item_id: itemId,
+            general_remarks: generalRemarks,
+            issue_remarks: errorRemarks
+        });
         
         setStatus({ type: 'success', message: skippedArray.length > 0 ? 'Scan and skipped departments logged successfully!' : 'Scan logged successfully!' });     
 
@@ -403,26 +387,6 @@ if (isEditingExisting && originalData?.id) {
             </select>
           </div>
 
-          {originalData?.history && originalData.history.length > 0 && (
-            <div className="p-3 bg-slate-50 dark:bg-gray-800/80 rounded-md border border-slate-200 dark:border-gray-700/50 mt-4">
-              <h4 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Previous Revisions</h4>
-              <div className="space-y-3">
-                {originalData.history.map((h, i) => (
-                  <div key={i} className="text-xs text-slate-700 dark:text-gray-300 bg-white dark:bg-gray-700/50 p-2.5 rounded shadow-sm border border-slate-100 dark:border-gray-600">
-                    <div className="font-medium text-slate-800 dark:text-gray-200 mb-1.5 flex items-center justify-between gap-1">
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">Revision {i + 1}</span> 
-                      <span className="text-slate-400 dark:text-gray-500 font-mono text-[10px]">{new Date(h.date || h.created_at).toLocaleString()}</span>
-                    </div>
-                    <div className="space-y-1.5 mt-2 bg-slate-50 dark:bg-gray-800/50 p-2 rounded">
-                      {h.general_remarks && h.general_remarks !== 'none' && <div><span className="font-semibold opacity-75">General:</span> {h.general_remarks}</div>}
-                      {h.issue_remarks && <div><span className="font-semibold text-amber-600 dark:text-amber-500 opacity-75">Issue:</span> {h.issue_remarks}</div>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div>
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">General Remarks</label>
@@ -469,14 +433,10 @@ if (isEditingExisting && originalData?.id) {
             className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={18} />
-            {loading ? 'Logging...' : (isEditingExisting ? (isModified ? 'Update Data (Edit Existing Remark)' : 'No Changes') : 'Log Scan')}
+            {loading ? 'Logging...' : (isEditingExisting ? (isModified ? 'Update Data (Log New Remark)' : 'No Changes') : 'Log Scan')}
           </button>
         </form>
       </div>
     </div>
   );
 }
-
-
-
-

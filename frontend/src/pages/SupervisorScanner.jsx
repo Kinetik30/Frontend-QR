@@ -75,7 +75,7 @@ export default function SupervisorScanner() {
 
   return (
     <div className="relative max-w-xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
-      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 space-y-6 border border-white/50 dark:border-gray-700/50 relative z-10">
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-purple-500/20 dark:shadow-purple-900/30 rounded-2xl p-6 space-y-6 border border-white/50 dark:border-gray-700/50 relative z-10">
         <div className="flex justify-between items-center border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-purple-100/50 dark:bg-purple-900/40 rounded-lg text-purple-600 dark:text-purple-400">

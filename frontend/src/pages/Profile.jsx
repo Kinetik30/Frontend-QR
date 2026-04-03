@@ -49,13 +49,13 @@ export default function Profile() {
   };
 
   return (
-    <div className="relative max-w-2xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
+    <div className="relative max-w-2xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-blue-100 via-blue-50 to-emerald-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900">
       <div className="relative z-10">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Profile</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">Manage your personal account settings</p>
       </div>
 
-      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50 dark:border-gray-700/50 relative z-10">
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 rounded-2xl p-6 border border-gray-200 dark:border-gray-700/50 relative z-10">
         <div className="flex items-center gap-2 mb-6 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
           <ShieldCheck className="text-blue-500" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Change Password</h3>

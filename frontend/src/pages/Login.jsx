@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn } from 'lucide-react';
+import QvovLogoLight from '../components/QvovLogoLight';
+import QvovLogoDark from '../components/QvovLogoDark';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -29,15 +36,9 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-indigo-50/40 via-purple-50/40 to-emerald-50/40 dark:from-gray-900 dark:via-indigo-900/10 dark:to-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl border border-white/50 dark:border-gray-700/50">
-        <div className="flex flex-col items-center justify-center space-y-2">   
-          <div className="p-3 bg-blue-100/50 dark:bg-blue-900/50 rounded-full text-blue-600 dark:text-blue-300">
-            <LogIn size={32} />
-          </div>
-          <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">QR Tracker</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
-        </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-blue-100/40 via-blue-50/40 to-emerald-50/40 dark:from-gray-900 dark:via-blue-900/10 dark:to-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 rounded-2xl border border-gray-200 dark:border-gray-700/50">
+        <div className="flex flex-col items-center justify-center space-y-4 pt-4 pb-2">{isDark ? (<QvovLogoDark width={240} className="h-auto drop-shadow-md" />) : (<QvovLogoLight width={240} className="h-auto drop-shadow-md" />)}<p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sign in to your account</p></div>
 
         {error && (
           <div className="p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/50 dark:text-red-200 rounded">
@@ -78,3 +79,8 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+
+

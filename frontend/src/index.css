@@ -1,10 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
 body {
   margin: 0;
+  font-family: "Poppins", sans-serif;
   min-height: 100vh;
   @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+  background-image: radial-gradient(
+    circle at top left,
+    var(--color-blue-100, #dbeafe) 0%,
+    transparent 100%
+  );
+  background-attachment: fixed;
+}
+
+.dark body {
+  background-image: radial-gradient(
+    circle at top left,
+    rgba(59, 130, 246, 0.15) 0%,
+    transparent 100%
+  );
 }
 
 /* Remove default focus outline from Recharts SVG */

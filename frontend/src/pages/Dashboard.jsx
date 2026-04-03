@@ -99,18 +99,14 @@ export default function Dashboard() {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="relative max-w-6xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-emerald-50 dark:from-gray-900 dark:via-indigo-900/20 dark:to-gray-900">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">System Dashboard</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Overview of system operations and physical plant data</p>
-      </div>
+    <div className="relative max-w-6xl mx-auto space-y-8 p-4 rounded-xl bg-gradient-to-br from-blue-100 via-blue-50 to-emerald-50/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900">
 
       <div className="grid grid-cols-1 gap-8 relative z-10">
         
         {/* QR Stats Graph */}
-        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-2 mb-2 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
-            <QrCode className="text-gray-600 dark:text-gray-300" />
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-gray-200 dark:border-gray-700/50">
+          <div className="flex items-center gap-2 mb-2 pb-4">
+            <QrCode className="text-blue-600 dark:text-blue-400" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">QR Tag Status</h3>
           </div>
           
@@ -120,7 +116,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mt-6">
               
               {/* Extreme left: Total Tags */}
-              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/60 dark:border-gray-700/50 flex flex-col justify-center items-center h-56 shadow-lg shadow-blue-900/5">
+              <div className="bg-white/50 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col justify-center items-center h-56 shadow-lg shadow-blue-900/5">
                 <p className="text-[15px] font-semibold text-gray-900 dark:text-white mb-4">Total</p>
                 <div className="p-3 rounded-full mb-3 bg-blue-100/50 dark:bg-blue-900/30 backdrop-blur-sm">
                   <QrCode size={24} className="text-blue-600 dark:text-blue-400" />
@@ -131,44 +127,77 @@ export default function Dashboard() {
 
               {/* Middle: Active / Inactive Cards Stacked */}
               <div className="flex flex-col gap-4 h-56">
-                <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 text-white p-4 rounded-3xl flex items-center justify-between shadow-lg flex-1">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-lg font-bold tracking-wider text-white mb-1">Active</p>
-                    <p className="text-4xl font-extrabold">{activeQrs}</p>
-                  </div>
-                  <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm">
-                    <QrCode size={24} strokeWidth={2.5} className="text-white drop-shadow-sm" />
+                {/* Active Card */}
+                <div className="relative bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-xl shadow-[#22c55e]/20 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#22c55e]/30 transition-all duration-300 flex-1 flex group">
+                  <div className="absolute right-0 top-4 bottom-4 w-3 bg-[#22c55e] rounded-l-xl transition-all group-hover:w-4"></div>
+                  <div className="flex justify-between items-center w-full pr-6">      
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Active</h4>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{activeQrs}</p>
+                    </div>
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <QrCode size={22} strokeWidth={2.2} className="text-[#22c55e]" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-400 to-red-500 text-white p-4 rounded-3xl flex items-center justify-between shadow-lg flex-1">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-lg font-bold tracking-wider text-white mb-1">Inactive</p>
-                    <p className="text-4xl font-extrabold">{inactiveQrs}</p>
+                {/* Inactive Card */}
+                <div className="relative bg-white dark:bg-gray-800 p-5 rounded-[1.5rem] shadow-xl shadow-[#ef4444]/20 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#ef4444]/30 transition-all duration-300 flex-1 flex group">
+                  <div className="absolute right-0 top-4 bottom-4 w-3 bg-[#ef4444] rounded-l-xl transition-all group-hover:w-4"></div>
+                  <div className="flex justify-between items-center w-full pr-6">      
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Inactive</h4>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{inactiveQrs}</p>
+                    </div>
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <QrCode size={22} strokeWidth={2.2} className="text-[#ef4444]" />
+                    </div>
                   </div>
-                  <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm">
-                    <QrCode size={24} strokeWidth={2.5} className="text-white drop-shadow-sm" />
-                  </div>                </div>
+                </div>
               </div>
-              {/* Extreme right: Pie Chart */}
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
+              {/* Extreme right: Donut Chart with Center Stat */}
+              <div className="h-56 w-full relative flex items-center justify-center">
+                {/* Center Stat Overlay (placed behind the chart SVG) */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+                  <span className="text-3xl font-bold text-gray-800 dark:text-white">
+                    {qrs && qrs.length > 0 ? Math.round((activeQrs / qrs.length) * 100) : 0}%
+                  </span>
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">
+                    Active
+                  </span>
+                </div>
+
+                <ResponsiveContainer width="100%" height="100%" className="relative z-10">
                   <PieChart>
                     <Pie
                       data={qrChartData}
                       cx="50%"
                       cy="50%"
+                      innerRadius={65}
                       outerRadius={85}
-                      paddingAngle={0}
+                      paddingAngle={2}
                       dataKey="value"
                       stroke="none"
                       style={{ outline: "none" }}
+                      animationBegin={0}
+                      animationDuration={800}
                     >
                       {qrChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} style={{ outline: "none" }} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color} 
+                          style={{ outline: "none", transition: 'opacity 0.3s ease, filter 0.3s ease' }} 
+                          className="hover:opacity-80 hover:drop-shadow-md cursor-pointer transition-all duration-300"
+                        />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} isAnimationActive={false} />
+                    <Tooltip 
+                      content={<CustomTooltip />} 
+                      cursor={{ fill: 'transparent' }} 
+                      isAnimationActive={true} 
+                      animationDuration={300}
+                      animationEasing="ease-out"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -178,61 +207,73 @@ export default function Dashboard() {
 
         {/* User Stats Layout (Only shown if data is successfully returned/allowed and user is admin) */}
         {isAdmin && users?.length > 0 && (
-          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50 dark:border-gray-700/50">
-            <div className="flex items-center gap-2 mb-6 border-b border-gray-200/50 dark:border-gray-700/50 pb-4">
-              <UsersIcon className="text-gray-500 dark:text-gray-400" />
+          <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-gray-200 dark:border-gray-700/50">
+            <div className="flex items-center gap-2 mb-6 pb-4">
+              <UsersIcon className="text-[#00c897]" />
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Registered Users</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">     
               {/* Total Users */}
-              <div className="bg-gradient-to-br from-teal-400 to-teal-500 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
-                <div className="flex justify-between items-center w-full">      
-                  <div className="flex flex-col">
-                    <p className="text-base font-bold text-white/90">Total Users</p>
-                    <p className="text-4xl font-extrabold text-white mt-1.5">{users?.length || 0}</p>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-[2rem] shadow-xl shadow-[#00c897]/25 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#00c897]/40 transition-all duration-300 flex min-h-[140px] group">
+                <div className="absolute right-0 top-6 bottom-6 w-3.5 bg-[#00c897] rounded-l-2xl transition-all group-hover:w-5"></div>
+                <div className="flex flex-col justify-between w-full pr-4">      
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <UsersIcon size={24} strokeWidth={2.2} className="text-[#00c897]" />
+                    </div>
                   </div>
-                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    <UsersIcon size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Users</h4>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{users?.length || 0}</p>
                   </div>
                 </div>
               </div>
 
               {/* Admins */}
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
-                <div className="flex justify-between items-center w-full">
-                  <div className="flex flex-col">
-                    <p className="text-base font-bold text-white/90">Admins</p> 
-                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Admins'] || 0}</p>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-[2rem] shadow-xl shadow-[#9c27b0]/25 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#9c27b0]/40 transition-all duration-300 flex min-h-[140px] group">
+                <div className="absolute right-0 top-6 bottom-6 w-3.5 bg-[#9c27b0] rounded-l-2xl transition-all group-hover:w-5"></div>
+                <div className="flex flex-col justify-between w-full pr-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <Shield size={24} strokeWidth={2.2} className="text-[#9c27b0]" />
+                    </div>
                   </div>
-                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    <Shield size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Admins</h4> 
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Admins'] || 0}</p>
                   </div>
                 </div>
               </div>
 
               {/* Supervisors */}
-              <div className="bg-gradient-to-br from-orange-400 to-orange-500 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
-                <div className="flex justify-between items-center w-full">
-                  <div className="flex flex-col">
-                    <p className="text-base font-bold text-white/90">Supervisors</p>
-                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Supervisors'] || 0}</p>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-[2rem] shadow-xl shadow-[#ff7900]/25 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#ff7900]/40 transition-all duration-300 flex min-h-[140px] group">
+                <div className="absolute right-0 top-6 bottom-6 w-3.5 bg-[#ff7900] rounded-l-2xl transition-all group-hover:w-5"></div>
+                <div className="flex flex-col justify-between w-full pr-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <ClipboardList size={24} strokeWidth={2.2} className="text-[#ff7900]" />
+                    </div>
                   </div>
-                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    <ClipboardList size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Supervisors</h4>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Supervisors'] || 0}</p>
                   </div>
                 </div>
               </div>
 
               {/* Operators */}
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-[1.75rem] text-white shadow-lg transition-all min-h-[140px] flex flex-col justify-center">
-                <div className="flex justify-between items-center w-full">      
-                  <div className="flex flex-col">
-                    <p className="text-base font-bold text-white/90">Operators</p>
-                    <p className="text-4xl font-extrabold text-white mt-1.5">{userStats['Operators'] || 0}</p>
+              <div className="relative bg-white dark:bg-gray-800 p-6 rounded-[2rem] shadow-xl shadow-[#4863ff]/25 border border-gray-200 dark:border-gray-700/50 hover:shadow-2xl hover:shadow-[#4863ff]/40 transition-all duration-300 flex min-h-[140px] group">
+                <div className="absolute right-0 top-6 bottom-6 w-3.5 bg-[#4863ff] rounded-l-2xl transition-all group-hover:w-5"></div>
+                <div className="flex flex-col justify-between w-full pr-4">      
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-2.5 border-[1.5px] border-gray-800 dark:border-gray-200 rounded-xl">
+                      <UserCog size={24} strokeWidth={2.2} className="text-[#4863ff]" />
+                    </div>
                   </div>
-                  <div className="bg-white/20 p-3.5 rounded-3xl backdrop-blur-md shadow-sm">
-                    <UserCog size={28} strokeWidth={2.5} className="text-white drop-shadow-md" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Operators</h4>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{userStats['Operators'] || 0}</p>
                   </div>
                 </div>
               </div>
@@ -242,7 +283,7 @@ export default function Dashboard() {
       </div>
 
       {/* Active Sessions List */}
-      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700/50 relative z-10">
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/50 relative z-10">
         <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center gap-2">
           <Activity className="text-blue-500" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Active Sessions</h3>
@@ -271,7 +312,7 @@ export default function Dashboard() {
             }
 
             return (
-              <li key={session.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <li key={session.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="font-bold text-gray-900 dark:text-white text-lg">{session.id || session.qr_id || session.batch_number || 'Unknown ID'}</span>
@@ -298,13 +339,16 @@ export default function Dashboard() {
                       const isCompleted = idx <= highestCompletedIdx;
                       const isCurrent = idx === highestCompletedIdx + 1;
 
-                      let colorClasses = "bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800/40 dark:border-gray-700 dark:text-gray-400";
-                      if (isCompleted) {
-                        colorClasses = "bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400";
-                      } else if (isCurrent) {
-                        colorClasses = "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-500/30 dark:text-blue-400";
-                      }
+                        const deptRemarks = session.remarks?.filter(r => r.department_id === dept.id || r.department === dept.name || r.department === dept.dept_type) || [];
+                        const hasError = deptRemarks.some(r => r.issue_remarks && r.issue_remarks.trim() !== "");
 
+                        let colorClasses = "bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800/40 dark:border-gray-700 dark:text-gray-400";
+                        if (hasError) {
+                          colorClasses = "bg-red-50 border-red-300 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400";
+                        } else if (isCompleted) {                            colorClasses = "bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400";
+                          } else if (isCurrent) {
+                            colorClasses = "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-500/30 dark:text-blue-400";
+                          }
                       return (
                         <React.Fragment key={dept.id || idx}>
                           <div className={`flex items-center text-sm font-medium px-4 py-1.5 rounded-md border shadow-sm transition-colors ${colorClasses}`}>
@@ -342,7 +386,7 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0 mb-2">
                 <Link
                   to={`/qr/${session.id || session.qr_id}/history`}
                   className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
@@ -363,3 +407,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+

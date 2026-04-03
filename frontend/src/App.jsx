@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { LogOut, Sun, Moon } from 'lucide-react';
+import QvovLogoLight from './components/QvovLogoLight';
+import QvovLogoDark from './components/QvovLogoDark';
 
 // Pages
 import Login from './pages/Login';
@@ -70,17 +72,31 @@ function Layout({ children }) {
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const navItemClass = (path) => `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-    isActive(path) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
+  const navItemClass = (path) => `px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+    isActive(path) 
+      ? 'bg-blue-100 text-blue-700 shadow-sm dark:bg-blue-900/40 dark:text-blue-200' 
+      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800/80'
   }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-indigo-50/40 via-purple-50/40 to-emerald-50/40 dark:from-gray-900 dark:via-indigo-900/10 dark:to-gray-900 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19] relative flex flex-col transition-colors duration-200 overflow-hidden">    
+      {/* Dark mode ambient background glows */}
+      <div className="fixed inset-0 pointer-events-none hidden dark:block z-0 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] mix-blend-screen"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] mix-blend-screen"></div>
+      </div>
+      
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow dark:border-b dark:border-gray-700/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">QR Tracker</h1>
-            <nav className="flex space-x-2">
+          <div className="flex flex-1 items-center justify-between">
+              <Link to="/dashboard" className="flex items-center mr-8 flex-shrink-0 transition-opacity hover:opacity-80">
+                {darkMode ? (
+                  <QvovLogoDark width={160} className="h-auto" />
+                ) : (
+                  <QvovLogoLight width={160} className="h-auto" />
+                )}
+              </Link>
+            <nav className="flex space-x-1 overflow-x-auto items-center flex-1">
               {getRoleLevel(user?.role) >= ROLES.supervisor && (
                 <Link to="/dashboard" className={navItemClass('/dashboard')}>Dashboard</Link>
               )}
