@@ -30,6 +30,8 @@ export default function Tags() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isPaginatedView, setIsPaginatedView] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [readyForRelease, setReadyForRelease] = useState(new Set());
 
   const fetchQRCodes = async (page = 1) => {
     try {
@@ -63,7 +65,39 @@ export default function Tags() {
 
   useEffect(() => {
     fetchQRCodes(1);
+    // Fetch departments for release-readiness check
+    apiClient.get('/departments').then(res => {
+      const depts = res.data?.items || (Array.isArray(res.data) ? res.data : []);
+      setDepartments([...depts].sort((a, b) => (a.sequence_order || 0) - (b.sequence_order || 0)));
+    }).catch(() => {});
   }, []);
+
+  // Check which active QRs are ready for release
+  useEffect(() => {
+    if (departments.length === 0 || qrCodes.length === 0) return;
+    const activeQrs = qrCodes.filter(q => q.status === 'active');
+    if (activeQrs.length === 0) return;
+
+    const checkRelease = async () => {
+      const releaseSet = new Set();
+      await Promise.all(activeQrs.map(async (qr) => {
+        try {
+          const res = await apiClient.get(`/session/${qr.id}`);
+          const remarks = res.data?.remarks || [];
+          let highestIdx = -1;
+          departments.forEach((dept, idx) => {
+            const has = remarks.find(r => r.department_id === dept.id || r.department === dept.name || r.department === dept.dept_type);
+            if (has) highestIdx = idx;
+          });
+          if (highestIdx === departments.length - 1) {
+            releaseSet.add(qr.id);
+          }
+        } catch {}
+      }));
+      setReadyForRelease(releaseSet);
+    };
+    checkRelease();
+  }, [qrCodes, departments]);
 
   const registerQR = async (e) => {
     e.preventDefault();
@@ -306,12 +340,35 @@ export default function Tags() {
         </div>
       )}
 
-        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
+      {/* Tag Stats */}
+      <div className="grid grid-cols-3 gap-4 relative z-10">
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-lg rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 text-center">
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalItems}</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Total Tags</p>
+        </div>
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-lg rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 text-center">
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{(qrCodes || []).filter(q => q.status === 'active').length}</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Active</p>
+        </div>
+        <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-lg rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 text-center">
+          <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{(qrCodes || []).filter(q => q.status === 'inactive').length}</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Inactive</p>
+        </div>
+      </div>
+
+      <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {qrCodes.length === 0 ? (
             <li className="p-6 text-center text-gray-500 dark:text-gray-400">No QR codes registered.</li>
-            ) : [...qrCodes].sort((a, b) => (a.status === 'active' ? -1 : 1) - (b.status === 'active' ? -1 : 1)).map((qr) => (
-              <li key={qr.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" onClick={() => handleTagClick(qr)}>
+            ) : [...qrCodes].sort((a, b) => {
+              const aRelease = readyForRelease.has(a.id) ? 0 : 1;
+              const bRelease = readyForRelease.has(b.id) ? 0 : 1;
+              if (aRelease !== bRelease) return aRelease - bRelease;
+              const aActive = a.status === 'active' ? 0 : 1;
+              const bActive = b.status === 'active' ? 0 : 1;
+              return aActive - bActive;
+            }).map((qr) => (
+              <li key={qr.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
@@ -338,7 +395,13 @@ export default function Tags() {
                       </button>
                     )}                  <button
                     onClick={() => setSelectedTag(qr)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded-md transition-colors"
+                    className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      qr.status === 'active'
+                        ? readyForRelease.has(qr.id)
+                          ? 'text-white bg-purple-600 hover:bg-purple-700'
+                          : 'text-white bg-red-600 hover:bg-red-700'
+                        : 'text-white bg-emerald-600 hover:bg-emerald-700'
+                    }`}
                   >
                     <Activity size={16} /> {qr.status === 'active' ? 'Release Tag' : 'Activate Tag'}
                   </button>
@@ -353,41 +416,14 @@ export default function Tags() {
             </li>
           ))}
         </ul>
-        {(!isPaginatedView && totalPages > 1) && (
+        {totalItems > 10 && (
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-            <button
-              onClick={() => {
-                setIsPaginatedView(true);
-                fetchQRCodes(1);
-              }}
-              className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium rounded-md hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors shadow-sm"
+            <Link
+              to="/tags/all"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 text-sm"
             >
-              View More ({totalItems} total tags)
-            </button>
-          </div>
-        )}
-        
-        {isPaginatedView && totalPages > 1 && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-4">
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Page {currentPage} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => fetchQRCodes(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => fetchQRCodes(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage >= totalPages}
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition"
-              >
-                Next
-              </button>
-            </div>
+              View All Tags →
+            </Link>
           </div>
         )}
       </div>

@@ -13,39 +13,81 @@ export default function Dashboard() {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [qrRes, usersRes, sessionsRes, deptRes] = await Promise.all([
-          apiClient.get('/qr').catch(() => ({ data: [] })),
-          apiClient.get('/users').catch(() => ({ data: [] })),
-          apiClient.get('/session/active-qrs').catch(() => ({ data: [] })),
-          apiClient.get('/departments').catch(() => ({ data: [] }))
-        ]);
-        const safeGetArray = (res) => {
-          if (!res || !res.data) return [];
-          if (Array.isArray(res.data)) return res.data;
-          const key = Object.keys(res.data).find(k => Array.isArray(res.data[k]));
-          return key ? res.data[key] : [];
-        };
+  const [selectedSessionToRelease, setSelectedSessionToRelease] = useState(null);
+  const [tagActionLoading, setTagActionLoading] = useState(false);
+  const [tagActionMessage, setTagActionMessage] = useState({ text: '', type: '' });
 
-        setQrs(safeGetArray(qrRes));
-        setSessions(safeGetArray(sessionsRes));
-        setUsers(safeGetArray(usersRes));
-        
-        const fetchedDepts = safeGetArray(deptRes);
-        const sortedDepts = [...fetchedDepts].sort((a, b) => 
-          (a.sequence_order || 0) - (b.sequence_order || 0)
-        );
-        setDepartments(sortedDepts);
-      } catch (err) {
-        console.error('Failed to fetch stats', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchStats = async () => {
+    try {
+      const [qrRes, usersRes, sessionsRes, deptRes] = await Promise.all([
+        apiClient.get('/qr').catch(() => ({ data: [] })),
+        apiClient.get('/users').catch(() => ({ data: [] })),
+        apiClient.get('/session/active-qrs').catch(() => ({ data: [] })),
+        apiClient.get('/departments').catch(() => ({ data: [] }))
+      ]);
+      const safeGetArray = (res) => {
+        if (!res || !res.data) return [];
+        if (Array.isArray(res.data)) return res.data;
+        const key = Object.keys(res.data).find(k => Array.isArray(res.data[k]));
+        return key ? res.data[key] : [];
+      };
+
+      setQrs(safeGetArray(qrRes));
+      setSessions(safeGetArray(sessionsRes));
+      setUsers(safeGetArray(usersRes));
+      
+      const fetchedDepts = safeGetArray(deptRes);
+      const sortedDepts = [...fetchedDepts].sort((a, b) => 
+        (a.sequence_order || 0) - (b.sequence_order || 0)
+      );
+      setDepartments(sortedDepts);
+    } catch (err) {
+      console.error('Failed to fetch stats', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
   }, []);
+
+  const handleReleaseTag = async () => {
+    if (!selectedSessionToRelease) return;
+    setTagActionLoading(true);
+    setTagActionMessage({ text: '', type: '' });
+    
+    try {
+      const qrId = selectedSessionToRelease.qr_id || selectedSessionToRelease.id;
+      
+      // Step 1: Fetch exact session ID for the QR code to safely close it
+      const qrDetailsRes = await apiClient.get(`/qr/${qrId}`);
+      const actualSessionId = qrDetailsRes.data?.active_session?.id;
+      
+      // Step 2: Release session 
+      if (actualSessionId) {
+        await apiClient.patch(`/session/${actualSessionId}/close`, {});
+      } else if (selectedSessionToRelease.session_id) {
+        // Fallback just in case the backend already detached it
+        await apiClient.patch(`/session/${selectedSessionToRelease.session_id}/close`, {}).catch(() => {});
+      }
+      
+      // Step 3: Then disable QR
+      await apiClient.patch(`/qr/${qrId}/disable`, {});
+      
+      setTagActionMessage({ text: 'Tag successfully released!', type: 'success' });
+      fetchStats();
+      
+      setTimeout(() => {
+        setSelectedSessionToRelease(null);
+        setTagActionMessage({ text: '', type: '' });
+      }, 2000);
+    } catch (err) {
+      setTagActionMessage({ text: err.response?.data?.detail || 'Failed to release tag.', type: 'error' });
+    } finally {
+      setTagActionLoading(false);
+    }
+  };
 
   if (loading) return <div className="text-center py-10 dark:text-gray-300">Loading Dashboard...</div>;
 
@@ -320,7 +362,12 @@ export default function Dashboard() {
                     <Activity size={14} className="text-blue-500 dark:text-blue-400" /> {session.notes || session.product_name || 'No Label'}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                    <Clock size={12} /> {session.created_at ? new Date(session.created_at).toLocaleString() : 'Invalid Date'}
+                    <Clock size={12} /> {(() => {
+                      const d = session.enabled_at || session.created_at || session.activated_at;
+                      if (!d) return 'No date';
+                      const parsed = new Date(d);
+                      return isNaN(parsed.getTime()) ? 'No date' : parsed.toLocaleString();
+                    })()}
                   </span>
                 </div>
                 
@@ -388,22 +435,80 @@ export default function Dashboard() {
               
               <div className="flex items-center gap-2 flex-shrink-0 mb-2">
                 <Link
-                  to={`/qr/${session.id || session.qr_id}/history`}
+                  to={`/qr/${session.qr_id || session.id}/history`}
                   className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded transition-colors"
                 >
                   <Eye size={16} /> View
                 </Link>
-                <Link
-                  to={`/qr/${session.id || session.qr_id}`}
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedSessionToRelease(session);
+                  }}
+                  className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-white rounded transition-colors ${
+                    isReleaseNext
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
                   Release Tag
-                </Link>
+                </button>
               </div>
             </li>
           )})}
         </ul>
       </div>
+
+      {selectedSessionToRelease && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in transition-opacity">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md overflow-hidden relative">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Release Active Session</h3>
+              <p className="text-sm font-mono text-gray-500 dark:text-gray-400 mb-4">Tag ID: {selectedSessionToRelease.qr_id || selectedSessionToRelease.id}</p>
+              
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md mb-4 border border-gray-100 dark:border-gray-600">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Session Notes / Product</p>
+                <div className="flex justify-between items-start mb-3">
+                  <p className="text-gray-900 dark:text-white">{selectedSessionToRelease.notes || selectedSessionToRelease.product_name || 'No description'}</p>
+                </div>
+              </div>
+
+              {tagActionMessage.text && (
+                <div className={`p-3 mb-4 rounded text-sm ${tagActionMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                  {tagActionMessage.text}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                {(!tagActionMessage.text || tagActionMessage.type === 'error') && !tagActionLoading && (
+                  <button 
+                    onClick={handleReleaseTag}
+                    disabled={tagActionLoading}
+                    className="flex-1 text-white rounded-md py-2 font-medium transition bg-red-600 hover:bg-red-700"
+                  >
+                    Release Tag
+                  </button>
+                )}
+                {(tagActionMessage.type === 'success' || tagActionLoading) && (
+                  <button 
+                    disabled
+                    className="flex-1 text-white rounded-md py-2 font-medium transition bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                  >
+                    {tagActionLoading ? 'Processing...' : 'Done'}
+                  </button>
+                )}
+                <button 
+                  onClick={() => { setSelectedSessionToRelease(null); setTagActionMessage({ text: '', type: '' }); }}
+                  disabled={tagActionLoading}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

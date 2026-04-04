@@ -67,7 +67,7 @@ export default function Profile() {
           </div>
         )}
 
-        <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
+        <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address (Read-only)</label>
             <input type="text" disabled value={user?.email || ''} className="mt-1 block w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400" />
@@ -80,7 +80,7 @@ export default function Profile() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
             <input type="password" required value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500" />
           </div>
-          <div className="pt-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
             <input type="password" required value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500" />
           </div>
@@ -88,7 +88,7 @@ export default function Profile() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
             <input type="password" required value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500" />
           </div>
-          <button type="submit" disabled={loading} className="w-full px-4 py-2 mt-4 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full px-4 py-2 mt-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
             {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>

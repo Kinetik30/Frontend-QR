@@ -8,9 +8,10 @@ import QvovLogoDark from './components/QvovLogoDark';
 // Pages
 import Login from './pages/Login';
 import ScanPage from './pages/ScanPage';
-import SupervisorScanner from './pages/SupervisorScanner';
+
 import Dashboard from './pages/Dashboard';
 import Tags from './pages/Tags';
+import AllTags from './pages/AllTags';
 import Users from './pages/Users';
 import SessionManager from './pages/SessionManager';
 import QRHistory from './pages/QRHistory';
@@ -100,9 +101,7 @@ function Layout({ children }) {
               {getRoleLevel(user?.role) >= ROLES.supervisor && (
                 <Link to="/dashboard" className={navItemClass('/dashboard')}>Dashboard</Link>
               )}
-              {getRoleLevel(user?.role) >= ROLES.supervisor && (
-                <Link to="/supervisor-scan" className={navItemClass('/supervisor-scan')}>Supervisor Scan</Link>
-              )}
+
               {getRoleLevel(user?.role) >= ROLES.operator && (
                 <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
               )}
@@ -173,12 +172,7 @@ export default function App() {
         </ProtectedRoute>
       } />
 
-      {/* Supervisor + Routes */}
-      <Route path="/supervisor-scan" element={
-        <ProtectedRoute minimumRole={ROLES.supervisor}>
-          <Layout><SupervisorScanner /></Layout>
-        </ProtectedRoute>
-      } />
+
       <Route path="/dashboard" element={
         <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><Dashboard /></Layout>
@@ -187,6 +181,11 @@ export default function App() {
       <Route path="/tags" element={
         <ProtectedRoute minimumRole={ROLES.supervisor}>
           <Layout><Tags /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/tags/all" element={
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
+          <Layout><AllTags /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/departments" element={

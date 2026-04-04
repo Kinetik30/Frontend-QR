@@ -186,10 +186,24 @@ let finalGeneralRemarks = generalRemarks ? generalRemarks.trim() : '';
           }
 
 if (isEditingExisting && originalData?.id) {
-                await apiClient.put(`/session/${qrId}/remarks/${originalData.id}`, {
-                    general_remarks: finalGeneralRemarks,
-                    issue_remarks: finalErrorRemarks
-                });
+                console.log('[ScanPage] Updating remark:', originalData.id, 'at', `/session/${qrId}/remarks/${originalData.id}`);
+                try {
+                  await apiClient.put(`/session/${qrId}/remarks/${originalData.id}`, {
+                      general_remarks: finalGeneralRemarks,
+                      issue_remarks: finalErrorRemarks
+                  });
+                } catch (putErr) {
+                  // Fallback: try PATCH if PUT returns 404/405
+                  if (putErr.response?.status === 404 || putErr.response?.status === 405) {
+                    console.log('[ScanPage] PUT failed, trying PATCH...');
+                    await apiClient.patch(`/session/${qrId}/remarks/${originalData.id}`, {
+                        general_remarks: finalGeneralRemarks,
+                        issue_remarks: finalErrorRemarks
+                    });
+                  } else {
+                    throw putErr;
+                  }
+                }
             } else {
                 await apiClient.post(`/session/${qrId}/remarks`, {
                     department_id: department,
@@ -374,13 +388,18 @@ if (isEditingExisting && originalData?.id) {
             >
               <option value="" className="bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-200">Select a department...</option>
               {departments.map((d, index) => {
-                const isCompleted = itemRemarks.some(r => r.department_id === d.id || r.department === d.name);
+                const deptRemarks = itemRemarks.filter(r => r.department_id === d.id || r.department === d.name);
+                const isCompleted = deptRemarks.length > 0;
+                const hasError = deptRemarks.some(r => r.issue_remarks && r.issue_remarks.trim() !== '');
                 const isCurrent = d.id === firstPendingDeptId;
                 
                 let optionClass = "bg-white dark:bg-[#2d3748] text-gray-900 dark:text-white font-medium py-1";
                 let prefix = "";
                 
-                if (isCompleted) {
+                if (hasError) {
+                  optionClass = "bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-300 font-medium py-1";
+                  prefix = "⚠ ";
+                } else if (isCompleted) {
                   optionClass = "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-medium py-1";
                   prefix = "✓ ";
                 } else if (isCurrent) {
