@@ -186,7 +186,6 @@ let finalGeneralRemarks = generalRemarks ? generalRemarks.trim() : '';
           }
 
 if (isEditingExisting && originalData?.id) {
-                console.log('[ScanPage] Updating remark:', originalData.id, 'at', `/session/${qrId}/remarks/${originalData.id}`);
                 try {
                   await apiClient.put(`/session/${qrId}/remarks/${originalData.id}`, {
                       general_remarks: finalGeneralRemarks,
@@ -195,7 +194,6 @@ if (isEditingExisting && originalData?.id) {
                 } catch (putErr) {
                   // Fallback: try PATCH if PUT returns 404/405
                   if (putErr.response?.status === 404 || putErr.response?.status === 405) {
-                    console.log('[ScanPage] PUT failed, trying PATCH...');
                     await apiClient.patch(`/session/${qrId}/remarks/${originalData.id}`, {
                         general_remarks: finalGeneralRemarks,
                         issue_remarks: finalErrorRemarks
@@ -430,7 +428,7 @@ if (isEditingExisting && originalData?.id) {
                   <div key={i} className="text-xs text-slate-700 dark:text-gray-300 bg-white dark:bg-gray-700/50 p-2.5 rounded shadow-sm border border-slate-100 dark:border-gray-600">
                     <div className="font-medium text-slate-800 dark:text-gray-200 mb-1.5 flex items-center justify-between gap-1">
                       <span className="font-semibold text-blue-600 dark:text-blue-400">Revision {i + 1}</span> 
-                      <span className="text-slate-400 dark:text-gray-500 font-mono text-[10px]">{new Date(h.date || h.created_at).toLocaleString()}</span>
+                      <span className="text-slate-400 dark:text-gray-500 font-mono text-[10px]">{new Date(h.date || h.created_at).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
                     </div>
                     <div className="space-y-1.5 mt-2 bg-slate-50 dark:bg-gray-800/50 p-2 rounded">
                       {h.general_remarks && h.general_remarks !== 'none' && <div><span className="font-semibold opacity-75">General:</span> {h.general_remarks}</div>}

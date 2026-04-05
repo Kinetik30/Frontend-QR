@@ -26,7 +26,6 @@ export default function QRHistory() {
         let qrData = null;
         if (tagRes.status === 'fulfilled') {
           const data = tagRes.value.data;
-          console.log('[QRHistory] /qr response:', data);
           qrData = data?.qr || data;
           setTagDetails(qrData);
         } else {
@@ -38,12 +37,9 @@ export default function QRHistory() {
         // Get active session from /session/{qrId} — same endpoint ScanPage uses
         if (sessionRes.status === 'fulfilled') {
           const sessionData = sessionRes.value.data;
-          console.log('[QRHistory] /session response:', sessionData);
           if (sessionData) {
             setActiveSession(sessionData);
           }
-        } else {
-          console.log('[QRHistory] /session failed:', sessionRes.reason?.response?.status);
         }
 
 
@@ -74,7 +70,7 @@ export default function QRHistory() {
   const formatDate = (d) => {
     if (!d) return null;
     const parsed = new Date(d);
-    return isNaN(parsed.getTime()) ? null : parsed.toLocaleString();
+    return isNaN(parsed.getTime()) ? null : parsed.toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
   };
 
   const isActive = tagDetails?.status === 'active' || tagDetails?.is_active;

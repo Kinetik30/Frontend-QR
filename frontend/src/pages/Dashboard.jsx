@@ -60,22 +60,10 @@ export default function Dashboard() {
     try {
       const qrId = selectedSessionToRelease.qr_id || selectedSessionToRelease.id;
       
-      // Step 1: Fetch exact session ID for the QR code to safely close it
-      const qrDetailsRes = await apiClient.get(`/qr/${qrId}`);
-      const actualSessionId = qrDetailsRes.data?.active_session?.id;
+      // Single call: archives remarks to produced_items + disables QR atomically
+      await apiClient.patch(`/session/${qrId}/close`, {});
       
-      // Step 2: Release session 
-      if (actualSessionId) {
-        await apiClient.patch(`/session/${actualSessionId}/close`, {});
-      } else if (selectedSessionToRelease.session_id) {
-        // Fallback just in case the backend already detached it
-        await apiClient.patch(`/session/${selectedSessionToRelease.session_id}/close`, {}).catch(() => {});
-      }
-      
-      // Step 3: Then disable QR
-      await apiClient.patch(`/qr/${qrId}/disable`, {});
-      
-      setTagActionMessage({ text: 'Tag successfully released!', type: 'success' });
+      setTagActionMessage({ text: 'Tag successfully released and archived!', type: 'success' });
       fetchStats();
       
       setTimeout(() => {
@@ -366,7 +354,7 @@ export default function Dashboard() {
                       const d = session.enabled_at || session.created_at || session.activated_at;
                       if (!d) return 'No date';
                       const parsed = new Date(d);
-                      return isNaN(parsed.getTime()) ? 'No date' : parsed.toLocaleString();
+                      return isNaN(parsed.getTime()) ? 'No date' : parsed.toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
                     })()}
                   </span>
                 </div>

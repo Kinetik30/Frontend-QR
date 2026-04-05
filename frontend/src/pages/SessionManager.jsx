@@ -33,9 +33,9 @@ export default function SessionManager() {
   const toggleStatus = async (newStatus) => {
     try {
       if (newStatus === 'active') await apiClient.patch(`/qr/${qrId}/enable`);
-      if (newStatus === 'inactive') await apiClient.patch(`/qr/${qrId}/disable`);
+      if (newStatus === 'inactive') await apiClient.patch(`/session/${qrId}/close`, {});
       fetchQRData();
-      setStatusMessage(`QR successfully marked as ${newStatus}`);
+      setStatusMessage(`QR successfully ${newStatus === 'active' ? 'activated' : 'released and archived'}`);
     } catch (err) {
       setStatusMessage('Update failed: ' + err.response?.data?.detail);
     }
@@ -57,11 +57,10 @@ export default function SessionManager() {
     }
   };
 
-  const closeSession = async (sessionId) => {
+  const closeSession = async () => {
     try {
-      await apiClient.patch(`/session/${sessionId}/close`);
-      // Releasing a tag makes it inactive
-      await apiClient.patch(`/qr/${qrId}/disable`);
+      // Single call: archives remarks + disables QR atomically
+      await apiClient.patch(`/session/${qrId}/close`);
       fetchQRData();
       setStatusMessage('Tag released successfully.');
     } catch (err) {
@@ -124,7 +123,7 @@ export default function SessionManager() {
                 </div>
                 <div>
                   <button 
-                    onClick={() => closeSession(session.id)}
+                    onClick={() => closeSession()}
                     className="flex items-center gap-1 bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded text-sm hover:bg-gray-900 dark:hover:bg-gray-600"
                   >
                     <StopCircle size={16} /> Release Tag

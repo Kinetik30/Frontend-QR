@@ -17,6 +17,8 @@ import SessionManager from './pages/SessionManager';
 import QRHistory from './pages/QRHistory';
 import Profile from './pages/Profile';
 import Departments from './pages/Departments';
+import ProductionHistory from './pages/ProductionHistory';
+import SupervisorScanner from './pages/SupervisorScanner';
 
 // Role Enum matching backend logic
 const ROLES = {
@@ -73,7 +75,7 @@ function Layout({ children }) {
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const navItemClass = (path) => `px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+  const navItemClass = (path) => `px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
     isActive(path) 
       ? 'bg-blue-100 text-blue-700 shadow-sm dark:bg-blue-900/40 dark:text-blue-200' 
       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800/80'
@@ -88,34 +90,46 @@ function Layout({ children }) {
       </div>
       
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow dark:border-b dark:border-gray-700/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex flex-1 items-center justify-between">
-              <Link to="/dashboard" className="flex items-center mr-8 flex-shrink-0 transition-opacity hover:opacity-80">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex flex-1 items-center justify-between min-w-0">
+              <Link to={getRoleLevel(user?.role) >= ROLES.supervisor ? "/dashboard" : "/scan"} className="flex items-center mr-4 flex-shrink-0 transition-opacity hover:opacity-80">
                 {darkMode ? (
-                  <QvovLogoDark width={160} className="h-auto" />
+                  <QvovLogoDark width={140} className="h-auto" />
                 ) : (
-                  <QvovLogoLight width={160} className="h-auto" />
+                  <QvovLogoLight width={140} className="h-auto" />
                 )}
               </Link>
-            <nav className="flex space-x-1 overflow-x-auto items-center flex-1">
-              {getRoleLevel(user?.role) >= ROLES.supervisor && (
-                <Link to="/dashboard" className={navItemClass('/dashboard')}>Dashboard</Link>
+            <nav className="flex space-x-0.5 items-center flex-1 flex-nowrap whitespace-nowrap">
+              {/* Admin nav order: Dashboard, QR Tags, Department, Supervisor Scan, Operator Scan, Archive, Users, Profile */}
+              {user?.role === 'admin' && (
+                <>
+                  <Link to="/dashboard" className={navItemClass('/dashboard')}>Dashboard</Link>
+                  <Link to="/tags" className={navItemClass('/tags')}>QR Tags</Link>
+                  <Link to="/departments" className={navItemClass('/departments')}>Department</Link>
+                  <Link to="/supervisor-scan" className={navItemClass('/supervisor-scan')}>Supervisor Scan</Link>
+                  <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
+                  <Link to="/archives" className={navItemClass('/archives')}>Archive</Link>
+                  <Link to="/users" className={navItemClass('/users')}>Users</Link>
+                  <Link to="/profile" className={navItemClass('/profile')}>Profile</Link>
+                </>
               )}
-
-              {getRoleLevel(user?.role) >= ROLES.operator && (
-                <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
+              {/* Supervisor nav order: Supervisor Scan, Operator Scan, Department, QR Tags, My Profile */}
+              {user?.role === 'supervisor' && (
+                <>
+                  <Link to="/supervisor-scan" className={navItemClass('/supervisor-scan')}>Supervisor Scan</Link>
+                  <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
+                  <Link to="/departments" className={navItemClass('/departments')}>Department</Link>
+                  <Link to="/tags" className={navItemClass('/tags')}>QR Tags</Link>
+                  <Link to="/profile" className={navItemClass('/profile')}>My Profile</Link>
+                </>
               )}
-              {getRoleLevel(user?.role) >= ROLES.supervisor && (
-                <Link to="/tags" className={navItemClass('/tags')}>QR Tags</Link>
-              )}
-              {getRoleLevel(user?.role) >= ROLES.supervisor && (
-                <Link to="/departments" className={navItemClass('/departments')}>Department</Link>
-              )}
-              {getRoleLevel(user?.role) >= ROLES.admin && (
-                <Link to="/users" className={navItemClass('/users')}>Users</Link>
-              )}
-              {user && (
-                <Link to="/profile" className={navItemClass('/profile')}>Profile</Link>
+              {/* Operator nav order: Operator Scan, QR Tags (view-only active), Profile */}
+              {user?.role === 'operator' && (
+                <>
+                  <Link to="/scan" className={navItemClass('/scan')}>Operator Scan</Link>
+                  <Link to="/tags" className={navItemClass('/tags')}>QR Tags</Link>
+                  <Link to="/profile" className={navItemClass('/profile')}>Profile</Link>
+                </>
               )}
             </nav>
           </div>
@@ -179,13 +193,18 @@ export default function App() {
         </ProtectedRoute>
       } />
       <Route path="/tags" element={
-        <ProtectedRoute minimumRole={ROLES.supervisor}>
+        <ProtectedRoute minimumRole={ROLES.operator}>
           <Layout><Tags /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/tags/all" element={
-        <ProtectedRoute minimumRole={ROLES.supervisor}>
+        <ProtectedRoute minimumRole={ROLES.operator}>
           <Layout><AllTags /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/supervisor-scan" element={
+        <ProtectedRoute minimumRole={ROLES.supervisor}>
+          <Layout><SupervisorScanner /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/departments" element={
@@ -199,7 +218,7 @@ export default function App() {
         </ProtectedRoute>
       } />
       <Route path="/qr/:qrId/history" element={
-        <ProtectedRoute minimumRole={ROLES.supervisor}>
+        <ProtectedRoute minimumRole={ROLES.operator}>
           <Layout><QRHistory /></Layout>
         </ProtectedRoute>
       } />
@@ -208,6 +227,11 @@ export default function App() {
       <Route path="/users" element={
         <ProtectedRoute minimumRole={ROLES.admin}>
           <Layout><Users /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/archives" element={
+        <ProtectedRoute minimumRole={ROLES.admin}>
+          <Layout><ProductionHistory /></Layout>
         </ProtectedRoute>
       } />
       

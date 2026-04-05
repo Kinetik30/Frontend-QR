@@ -54,12 +54,9 @@ export default function SupervisorScanner() {
           await apiClient.patch(`/qr/${scannedQR.id}/enable`, {});
           setStatus({ type: 'success', message: 'Tag activated successfully!' });
         } else {
-          // Handle release
-          if (activeSession) {
-            await apiClient.patch(`/session/${activeSession.id}/close`, {});
-          }
-          await apiClient.patch(`/qr/${scannedQR.id}/disable`, {});
-          setStatus({ type: 'success', message: 'Tag released successfully!' });
+          // Single call: archives remarks + disables QR atomically
+          await apiClient.patch(`/session/${scannedQR.id}/close`, {});
+          setStatus({ type: 'success', message: 'Tag released and archived successfully!' });
         }
 
       // Refresh state

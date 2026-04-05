@@ -7,6 +7,8 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function Tags() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isOperator = user?.role === 'operator';
   const [qrCodes, setQrCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,6 +26,7 @@ export default function Tags() {
   const [tagActionLoading, setTagActionLoading] = useState(false);
   const [tagActionMessage, setTagActionMessage] = useState({ text: '', type: '' });
   const [tagToDelete, setTagToDelete] = useState(null);
+  const [activationNotes, setActivationNotes] = useState('');
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +57,12 @@ export default function Tags() {
         setTotalItems(qrData.length);
       }
 
-      setQrCodes(qrData || []);
+      // Operators can only see active tags
+      if (isOperator) {
+        setQrCodes((qrData || []).filter(q => q.status === 'active'));
+      } else {
+        setQrCodes(qrData || []);
+      }
       setCurrentPage(page);
     } catch (err) {
       setError('Failed to fetch QR codes.');
@@ -136,12 +144,14 @@ export default function Tags() {
 
     try {
       if (newStatus === 'active') {
-        await apiClient.patch(`/qr/${tag.id}/enable`, {});
+        await apiClient.patch(`/qr/${tag.id}/enable`, { notes: activationNotes.trim() || undefined });
       } else {
-        await apiClient.patch(`/qr/${tag.id}/disable`, {});
+        // Archive remarks to produced_items, then disable QR — all in one call
+        await apiClient.patch(`/session/${tag.id}/close`, {});
       }
-      setTagActionMessage({ text: `Tag successfully marked as ${newStatus}!`, type: 'success' });
+      setTagActionMessage({ text: `Tag successfully ${newStatus === 'active' ? 'activated' : 'released and archived'}!`, type: 'success' });
       fetchQRCodes(isPaginatedView ? currentPage : 1);
+      setActivationNotes('');
       setTimeout(() => {
         setSelectedTag(null);
         setTagActionMessage({ text: '', type: '' });
@@ -176,6 +186,7 @@ export default function Tags() {
       }, 2000);
     } catch (err) {
       setTagActionMessage({ text: err.response?.data?.detail || 'Failed to delete tag.', type: 'error' });
+    } finally {
       setTagActionLoading(false);
     }
   };
@@ -356,17 +367,34 @@ export default function Tags() {
         </div>
       </div>
 
+      {/* Tag Overview heading */}
+      <div className="flex items-center justify-between relative z-10">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tag Overview</h3>
+        <Link
+          to="/tags/all"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 text-sm"
+        >
+          View All Tags →
+        </Link>
+      </div>
+
       <div className="bg-white/70 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl shadow-blue-500/20 dark:shadow-blue-900/30 border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden relative z-10">
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {qrCodes.length === 0 ? (
-            <li className="p-6 text-center text-gray-500 dark:text-gray-400">No QR codes registered.</li>
+            <li className="p-6 text-center text-gray-500 dark:text-gray-400">{isOperator ? 'No active QR tags found.' : 'No QR codes registered.'}</li>
             ) : [...qrCodes].sort((a, b) => {
+              // 1. Ready for release first
               const aRelease = readyForRelease.has(a.id) ? 0 : 1;
               const bRelease = readyForRelease.has(b.id) ? 0 : 1;
               if (aRelease !== bRelease) return aRelease - bRelease;
+              // 2. Active before inactive
               const aActive = a.status === 'active' ? 0 : 1;
               const bActive = b.status === 'active' ? 0 : 1;
-              return aActive - bActive;
+              if (aActive !== bActive) return aActive - bActive;
+              // 3. Within same status: oldest first (by enabled_at for active, created_at for inactive)
+              const aDate = a.status === 'active' ? (a.enabled_at || a.created_at || '') : (a.created_at || '');
+              const bDate = b.status === 'active' ? (b.enabled_at || b.created_at || '') : (b.created_at || '');
+              return new Date(aDate) - new Date(bDate);
             }).map((qr) => (
               <li key={qr.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
               <div className="flex items-center justify-between">
@@ -376,14 +404,16 @@ export default function Tags() {
                   </div>
                   <div>
                     <h4 className="text-md font-medium text-gray-900 dark:text-white break-all">{qr.id}</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{qr.notes || 'No description provided'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{qr.status === 'active' ? (qr.notes || 'No label') : 'Inactive tag'}</p>
                     <div className="mt-1">
                       {getStatusBadge(qr.status)}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">                    {user?.role === 'admin' && (
+                <div className="flex space-x-2">
+                  {/* Delete button - admin only */}
+                  {isAdmin && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -393,18 +423,23 @@ export default function Tags() {
                       >
                         <Trash size={16} />
                       </button>
-                    )}                  <button
-                    onClick={() => setSelectedTag(qr)}
-                    className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      qr.status === 'active'
-                        ? readyForRelease.has(qr.id)
-                          ? 'text-white bg-purple-600 hover:bg-purple-700'
-                          : 'text-white bg-red-600 hover:bg-red-700'
-                        : 'text-white bg-emerald-600 hover:bg-emerald-700'
-                    }`}
-                  >
-                    <Activity size={16} /> {qr.status === 'active' ? 'Release Tag' : 'Activate Tag'}
-                  </button>
+                  )}
+                  {/* Activate/Release button - admin and supervisor only, hidden for operators */}
+                  {!isOperator && (
+                    <button
+                      onClick={() => setSelectedTag(qr)}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                        qr.status === 'active'
+                          ? readyForRelease.has(qr.id)
+                            ? 'text-white bg-purple-600 hover:bg-purple-700'
+                            : 'text-white bg-red-600 hover:bg-red-700'
+                          : 'text-white bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                    >
+                      <Activity size={16} /> {qr.status === 'active' ? 'Release Tag' : 'Activate Tag'}
+                    </button>
+                  )}
+                  {/* History link - visible to all roles */}
                   <Link
                     to={`/qr/${qr.id}/history`}
                     className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
@@ -416,16 +451,6 @@ export default function Tags() {
             </li>
           ))}
         </ul>
-        {totalItems > 10 && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-            <Link
-              to="/tags/all"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 text-sm"
-            >
-              View All Tags →
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Inline Tag Details / Status Overlay Model */}
@@ -437,10 +462,12 @@ export default function Tags() {
               <p className="text-sm font-mono text-gray-500 dark:text-gray-400 mb-4">{selectedTag.id}</p>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md mb-4 border border-gray-100 dark:border-gray-600">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes / Label</p>
                 <div className="flex justify-between items-start mb-3">
-                  <p className="text-gray-900 dark:text-white">{selectedTag.notes || 'No description'}</p>
-                  {user?.role === 'admin' && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Status</p>
+                    <div className="mt-1">{getStatusBadge(selectedTag.status)}</div>
+                  </div>
+                  {isAdmin && (
                     <button
                       onClick={() => handleDeleteTag(selectedTag.id)}
                       disabled={tagActionLoading}
@@ -451,9 +478,27 @@ export default function Tags() {
                     </button>
                   )}
                 </div>
-                
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Status</p>
-                <div className="mt-1">{getStatusBadge(selectedTag.status)}</div>
+
+                {selectedTag.status === 'active' && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes / Label</p>
+                    <p className="text-gray-900 dark:text-white mt-1">{selectedTag.notes || 'No label'}</p>
+                  </div>
+                )}
+
+                {selectedTag.status !== 'active' && !isOperator && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">QR Label / Notes</label>
+                    <input
+                      type="text"
+                      value={activationNotes}
+                      onChange={(e) => setActivationNotes(e.target.value)}
+                      placeholder="Enter a label or description for this tag..."
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">This label will be displayed on the tag after activation.</p>
+                  </div>
+                )}
               </div>
 
               {tagActionMessage.text && (
@@ -463,13 +508,14 @@ export default function Tags() {
               )}
 
               <div className="flex gap-3 mt-6">
-                {(!tagActionMessage.text || tagActionMessage.type === 'error') && !tagActionLoading && (
+                {/* Activate/Release in modal - hidden for operators */}
+                {!isOperator && (!tagActionMessage.text || tagActionMessage.type === 'error') && !tagActionLoading && (
                   <button 
                     onClick={() => handleToggleTagStatus(selectedTag)}
                     disabled={tagActionLoading}
                     className={`flex-1 text-white rounded-md py-2 font-medium transition ${
                       selectedTag.status === 'active' 
-                      ? 'bg-red-600 hover:bg-red-700' // Make release look destructive/warning
+                      ? 'bg-red-600 hover:bg-red-700'
                       : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                   >
@@ -485,7 +531,7 @@ export default function Tags() {
                   </button>
                 )}
                 <button 
-                  onClick={() => { setSelectedTag(null); setTagActionMessage({ text: '', type: '' }); }}
+                  onClick={() => { setSelectedTag(null); setTagActionMessage({ text: '', type: '' }); setActivationNotes(''); }}
                   disabled={tagActionLoading}
                   className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-md font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                 >
