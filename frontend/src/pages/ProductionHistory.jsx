@@ -96,14 +96,14 @@ export default function ProductionHistory() {
     if (departments.length > 0) {
       const finalDept = departments[departments.length - 1];
       const finalHasRemark = remarks.find(r =>
-        String(r.department_id) === String(finalDept.id) || r.department === finalDept.name || r.department === finalDept.dept_type
+        r.department_name === finalDept.name || r.department === finalDept.name
       );
       if (finalHasRemark) reachedFinalDept = true;
 
       for (let i = departments.length - 1; i >= 0; i--) {
         const dept = departments[i];
         const hasRemark = remarks.find(r =>
-          String(r.department_id) === String(dept.id) || r.department === dept.name || r.department === dept.dept_type
+          r.department_name === dept.name || r.department === dept.name
         );
         if (hasRemark) {
           lastDeptName = dept.name || dept.dept_type;
@@ -115,7 +115,7 @@ export default function ProductionHistory() {
     if (reachedFinalDept) return { label: 'Complete Pipeline', type: 'green' };
 
     if (!lastDeptName) {
-      lastDeptName = remarks[remarks.length - 1]?.department || 'Activation';
+      lastDeptName = remarks[remarks.length - 1]?.department_name || remarks[remarks.length - 1]?.department || 'Activation';
     }
     return { label: lastDeptName, type: 'amber' };
   };
@@ -316,7 +316,7 @@ export default function ProductionHistory() {
                     departments.map((dept, idx) => {
                       const remarks = selectedItem.remarks_data || [];
                       const deptRemark = remarks.find(r =>
-                        String(r.department_id) === String(dept.id) || r.department === dept.name || r.department === dept.dept_type
+                        r.department_name === dept.name || r.department === dept.name
                       );
                       const isCompleted = !!deptRemark;
                       const hasError = deptRemark?.issue_remarks && deptRemark.issue_remarks.trim() !== '';
@@ -334,7 +334,7 @@ export default function ProductionHistory() {
                         const hasErr = remark.issue_remarks && remark.issue_remarks.trim() !== '';
                         return (
                           <React.Fragment key={idx}>
-                            {renderTrackerNode(remark.department || 'Production', true, hasErr)}
+                            {renderTrackerNode(remark.department_name || remark.department || 'Production', true, hasErr)}
                             <ArrowRight size={14} className="text-gray-400 dark:text-gray-600 flex-shrink-0" />
                           </React.Fragment>
                         );
@@ -357,7 +357,7 @@ export default function ProductionHistory() {
                       <div key={idx} className="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h4 className="font-bold text-gray-900 dark:text-white text-lg">{remark.department}</h4>
+                            <h4 className="font-bold text-gray-900 dark:text-white text-lg">{remark.department_name || remark.department}</h4>
                             <span className="text-xs text-gray-500 flex items-center gap-1 mt-1">
                               <Calendar size={12} /> {formatDate(remark.created_at)}
                             </span>

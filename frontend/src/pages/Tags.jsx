@@ -27,6 +27,7 @@ export default function Tags() {
   const [tagActionMessage, setTagActionMessage] = useState({ text: '', type: '' });
   const [tagToDelete, setTagToDelete] = useState(null);
   const [activationNotes, setActivationNotes] = useState('');
+  const [manualDeleteId, setManualDeleteId] = useState('');
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,29 +81,32 @@ export default function Tags() {
     }).catch(() => {});
   }, []);
 
-  // Check which active QRs are ready for release
+  // Check which active QRs are ready for release (single API call instead of N+1)
   useEffect(() => {
     if (departments.length === 0 || qrCodes.length === 0) return;
     const activeQrs = qrCodes.filter(q => q.status === 'active');
-    if (activeQrs.length === 0) return;
+    if (activeQrs.length === 0) { setReadyForRelease(new Set()); return; }
 
     const checkRelease = async () => {
-      const releaseSet = new Set();
-      await Promise.all(activeQrs.map(async (qr) => {
-        try {
-          const res = await apiClient.get(`/session/${qr.id}`);
-          const remarks = res.data?.remarks || [];
+      try {
+        const res = await apiClient.get('/session/active-qrs?page=1&page_size=100');
+        const activeItems = res.data?.items || res.data?.active_qrs || [];
+        const releaseSet = new Set();
+        for (const item of activeItems) {
+          const remarks = item.remarks || [];
           let highestIdx = -1;
           departments.forEach((dept, idx) => {
-            const has = remarks.find(r => r.department_id === dept.id || r.department === dept.name || r.department === dept.dept_type);
+            const has = remarks.find(r => r.department_id === dept.id || r.department === dept.name);
             if (has) highestIdx = idx;
           });
           if (highestIdx === departments.length - 1) {
-            releaseSet.add(qr.id);
+            releaseSet.add(item.qr_id || item.id);
           }
-        } catch {}
-      }));
-      setReadyForRelease(releaseSet);
+        }
+        setReadyForRelease(releaseSet);
+      } catch {
+        setReadyForRelease(new Set());
+      }
     };
     checkRelease();
   }, [qrCodes, departments]);
@@ -191,7 +195,7 @@ export default function Tags() {
     }
   };
 
-  const [manualDeleteId, setManualDeleteId] = useState('');
+
 
   const handleManualDelete = (e) => {
     e.preventDefault();

@@ -39,19 +39,19 @@ export default function ScanPage() {
 
   // Fetch session dynamically when qrId is valid
   useEffect(() => {
-    const fetchSession = async () => {
-      if (qrId && qrId.length >= 8) {
-        try {
-          const res = await apiClient.get(`/session/${qrId}`);
-          setSessionData(res.data);
-        } catch (err) {
-          setSessionData(null);
-        }
-      } else {
+    if (!qrId || qrId.length < 8) {
+      setSessionData(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiClient.get(`/session/${qrId}`);
+        setSessionData(res.data);
+      } catch (err) {
         setSessionData(null);
       }
-    };
-    fetchSession();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [qrId]);
 
   // Filter remarks for the specific ITEM id
